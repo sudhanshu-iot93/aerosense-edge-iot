@@ -21,12 +21,23 @@
   #define A0 0
   #define A1 1
   #define A2 2
+  #define A3 3
+  #define A4 4
+  #define A5 5
+  #define D0 0
+  #define D1 1
+  #define D7 7
+  #define LED_BUILTIN 13
   #define INPUT 0
   #define OUTPUT 1
+  #define HIGH 1
+  #define LOW 0
   inline void pinMode(int, int) {}
+  inline void digitalWrite(int, int) {}
   inline int analogRead(int) { return 512; }
   inline void analogReadResolution(int) {}
   inline void delay(int) {}
+  inline uint32_t millis() { return 0; }
   
   class HardwareSerial {
   public:
@@ -35,7 +46,10 @@
     uint8_t read() { return 0; }
     void print(const char*) {}
     void flush() {}
+    std::string readStringUntil(char) { return ""; }
   };
+  extern HardwareSerial Serial;
+  extern HardwareSerial Serial1;
 
   class TwoWireMock {
   public:

@@ -17,15 +17,43 @@
 #if defined(ARDUINO) || __has_include(<Arduino.h>)
   #include <Arduino.h>
 #else
+  #include <algorithm>
+  #include <cctype>
+
+  class String : public std::string {
+  public:
+    String() : std::string() {}
+    String(const char* s) : std::string(s ? s : "") {}
+    String(const std::string& s) : std::string(s) {}
+
+    void trim() {
+      erase(begin(), std::find_if(begin(), end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+      }));
+      erase(std::find_if(rbegin(), rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+      }).base(), end());
+    }
+
+    bool startsWith(const char* prefix) const {
+      if (!prefix) return false;
+      return rfind(prefix, 0) == 0;
+    }
+
+    bool startsWith(const String& prefix) const {
+      return rfind(prefix, 0) == 0;
+    }
+  };
+
   class Stream {
   public:
+    virtual ~Stream() = default;
     virtual int available() { return 0; }
     virtual int read() { return -1; }
     virtual void print(const char*) {}
     virtual void flush() {}
-    virtual std::string readStringUntil(char) { return ""; }
+    virtual String readStringUntil(char) { return String(""); }
   };
-  #define String std::string
 #endif
 
 class RingBufferIPC {
