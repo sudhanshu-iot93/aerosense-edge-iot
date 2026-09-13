@@ -12,7 +12,7 @@ class EdgeApiService {
   factory EdgeApiService() => _instance;
   EdgeApiService._internal();
 
-  String _baseUrl = 'http://localhost:8090';
+  String _baseUrl = 'http://localhost:8088';
   String get baseUrl => _baseUrl;
   set baseUrl(String url) {
     _baseUrl = url.endsWith('/') ? url.substring(0, url.length - 1) : url;
