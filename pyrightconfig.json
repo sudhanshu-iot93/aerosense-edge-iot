@@ -1,0 +1,12 @@
+{
+  "include": [
+    "edge_ai",
+    "edge_core",
+    "tests"
+  ],
+  "extraPaths": [
+    "edge_ai",
+    "edge_core"
+  ],
+  "reportMissingImports": "warning"
+}

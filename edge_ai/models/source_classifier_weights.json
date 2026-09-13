@@ -1,0 +1,26 @@
+{
+  "model_name": "AeroSense_Source_Attribution_v1.0",
+  "target_arch": "Qualcomm QRB2210 (ARMv8 Cortex-A53) / Arduino UNO Q",
+  "classes": [
+    "Clean Baseline",
+    "Traffic Exhaust",
+    "Garbage Burning",
+    "Construction Dust",
+    "Cooking Smoke",
+    "Crop Residue"
+  ],
+  "input_features": [
+    "pm25",
+    "pm10",
+    "co",
+    "co2",
+    "no2",
+    "voc",
+    "pm_ratio",
+    "co_to_co2_ratio",
+    "no2_to_voc_ratio"
+  ],
+  "accuracy_pct": 95.4,
+  "inference_latency_ms": 1.2,
+  "memory_footprint_kb": 4.8
+}

@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroSense Pro — Edge AI Air Intelligence | Arduino UNO Q</title>
+  <meta name="description" content="100% on-device edge AI for real-time air pollution source attribution, stoichiometric signatures, 6-hour forecasting, and 30-day circular analytics running entirely on Arduino UNO Q.">
+
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:title"       content="AeroSense Pro — Air Intelligence Reimagined">
+  <meta property="og:description" content="100% offline edge AI for real-time source attribution and 6-hour hyperlocal forecasting. Zero cloud cost.">
+  <meta property="og:type"        content="website">
+
+  <!-- Apple Touch Icon & Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='12' fill='%230A101D'/><circle cx='24' cy='24' r='16' stroke='%2330D158' stroke-width='2' stroke-dasharray='4 2'/><path d='M14 24 C14 16 20 12 26 12 C34 12 36 18 34 24 C32 30 24 34 18 34' stroke='%2364D2FF' stroke-width='3' stroke-linecap='round' fill='none'/><circle cx='24' cy='24' r='4' fill='%2330D158'/></svg>">
+
+  <!-- Google Fonts: Inter & Outfit & JetBrains Mono for SF Pro elegance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet.js for City AQI Heatmap (v1.5.0) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="dark-theme">
+
+  <!-- Dynamic Atmospheric Particle Canvas Visualizer -->
+  <canvas id="particle-canvas" class="particle-canvas"></canvas>
+
+  <noscript>
+    <div style="padding:2rem;background:#1c1c1e;color:#f5f5f7;text-align:center;font-family:sans-serif;">
+      AeroSense Pro requires JavaScript to display real-time sensor intelligence.
+    </div>
+  </noscript>
+
+  <!-- Apple Floating Translucent Navigation Bar with Well-Organized 2-Tier Architecture -->
+  <header class="app-header" id="app-header">
+    <div class="header-container">
+
+      <!-- Tier 1: Brand, System Menubar, Live Telemetry & System Controls -->
+      <div class="header-top-row">
+        <!-- Left: Brand Identity + System Menus -->
+        <div class="header-top-left">
+          <div class="header-brand">
+            <div class="logo-shield" title="AeroSense Edge AI Platform">
+              <!-- Attractive AeroSense Atmospheric Emblem -->
+              <svg class="aerosense-logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="logoBgGrad" x1="0" y1="0" x2="48" y2="48">
+                    <stop offset="0%" stop-color="#141E30" />
+                    <stop offset="100%" stop-color="#0A0F1D" />
+                  </linearGradient>
+                  <linearGradient id="aeroGrad1" x1="6" y1="8" x2="42" y2="40">
+                    <stop offset="0%" stop-color="#30D158" />
+                    <stop offset="50%" stop-color="#64D2FF" />
+                    <stop offset="100%" stop-color="#0A84FF" />
+                  </linearGradient>
+                  <linearGradient id="aeroGrad2" x1="42" y1="8" x2="6" y2="40">
+                    <stop offset="0%" stop-color="#BF5AF2" />
+                    <stop offset="50%" stop-color="#64D2FF" />
+                    <stop offset="100%" stop-color="#30D158" />
+                  </linearGradient>
+                </defs>
+                <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#logoBgGrad)" stroke="rgba(255,255,255,0.18)" stroke-width="1.2"/>
+                <circle cx="24" cy="24" r="18" stroke="url(#aeroGrad1)" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.6" class="logo-orbit-ring"/>
+                <path d="M 12 24 C 12 16, 20 12, 26 12 C 34 12, 38 18, 36 24 C 34 30, 26 34, 20 34 C 14 34, 12 30, 14 26" stroke="url(#aeroGrad1)" stroke-width="2.8" stroke-linecap="round"/>
+                <path d="M 16 22 C 16 18, 20 16, 24 16 C 30 16, 32 20, 31 24 C 30 28, 24 30, 21 30" stroke="url(#aeroGrad2)" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+                <circle cx="24" cy="24" r="4" fill="#FFFFFF"/>
+                <circle cx="24" cy="24" r="2.2" fill="#30D158" class="logo-ai-core"/>
+              </svg>
+            </div>
+            <div class="brand-text-block">
+              <div class="brand-title-row">
+                <h1 class="brand-title">AeroSense <span class="badge-edge">PRO</span></h1>
+                <span class="board-chip">ARDUINO UNO Q</span>
+              </div>
+              <p class="brand-subtitle">Qualcomm QRB2210 Quad A53 + STM32U585 Microcontroller</p>
+            </div>
+          </div>
+
+          <div class="header-v-divider" aria-hidden="true"></div>
+
+          <!-- Apple System Menubar Dropdowns -->
+          <div class="apple-menubar">
+            <!-- AeroSense System Menu -->
+            <div class="menu-dropdown">
+              <button class="menu-btn" id="menu-btn-app"> AeroSense ▾</button>
+              <div class="dropdown-menu" id="dropdown-app">
+                <button class="dropdown-item" id="item-about"><span class="item-icon">🍏</span> About AeroSense Pro <span class="item-shortcut">⌘I</span></button>
+                <button class="dropdown-item" id="item-bom"><span class="item-icon">💰</span> Bill of Materials &amp; Cost <span class="item-shortcut">$72.50</span></button>
+                <button class="dropdown-item" id="item-hardware"><span class="item-icon">📋</span> Hardware Specs &amp; Pinout</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" id="item-toggle-theme"><span class="item-icon">🌓</span> Toggle Light/Dark Theme <span class="item-shortcut">⌘T</span></button>
+                <button class="dropdown-item" id="item-privacy"><span class="item-icon">🔒</span> Zero-Cloud Privacy Audit</button>
+              </div>
+            </div>
+
+            <!-- File & Export Menu -->
+            <div class="menu-dropdown">
+              <button class="menu-btn" id="menu-btn-file">File ▾</button>
+              <div class="dropdown-menu" id="dropdown-file">
+                <button class="dropdown-item" id="item-export-csv"><span class="item-icon">📥</span> Export Telemetry (CSV) <span class="item-shortcut">.csv</span></button>
+                <button class="dropdown-item" id="item-export-json"><span class="item-icon">📄</span> Export SQLite Records (JSON) <span class="item-shortcut">.json</span></button>
+                <button class="dropdown-item" id="item-download-bin"><span class="item-icon">🗜️</span> Gorilla Compressed Stream <span class="item-shortcut">.bin</span></button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" id="item-print-report"><span class="item-icon">🖨️</span> Print / Save PDF Summary <span class="item-shortcut">⌘P</span></button>
+              </div>
+            </div>
+
+            <!-- Scenarios Menu -->
+            <div class="menu-dropdown">
+              <button class="menu-btn" id="menu-btn-scenarios">Scenarios ▾</button>
+              <div class="dropdown-menu" id="dropdown-scenarios">
+                <button class="dropdown-item" data-scenario="Clean Baseline"><span class="item-icon">🌿</span> Clean Baseline Air</button>
+                <button class="dropdown-item" data-scenario="Traffic Jam"><span class="item-icon">🚗</span> Heavy Traffic Jam (NO₂ Spike)</button>
+                <button class="dropdown-item" data-scenario="Garbage Fire"><span class="item-icon">🔥</span> Illegal Garbage Fire (VOC/CO)</button>
+                <button class="dropdown-item" data-scenario="Construction Dust"><span class="item-icon">🏗️</span> Construction Excavation (PM10)</button>
+                <button class="dropdown-item" data-scenario="Cooking Smoke"><span class="item-icon">🍳</span> Kitchen Cooking Smoke (CO₂)</button>
+                <button class="dropdown-item" data-scenario="Crop Residue"><span class="item-icon">🌾</span> Stubble / Crop Residue</button>
+              </div>
+            </div>
+
+            <!-- Tools & Diagnostics Menu -->
+            <div class="menu-dropdown">
+              <button class="menu-btn" id="menu-btn-tools">Tools ▾</button>
+              <div class="dropdown-menu" id="dropdown-tools">
+                <button class="dropdown-item" id="item-tool-compress"><span class="item-icon">⚡</span> Run Gorilla Compression Test</button>
+                <button class="dropdown-item" id="item-tool-ping"><span class="item-icon">📡</span> Ping All Mesh Nodes</button>
+                <button class="dropdown-item" id="item-tool-toggle-sim"><span class="item-icon">🔄</span> Toggle Simulation Mode</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" id="item-tool-clear-history"><span class="item-icon">🧹</span> Clear Real-Time History Ring</button>
+              </div>
+            </div>
+
+            <!-- Anywhere Profiles & Standards Studio Menu -->
+            <div class="menu-dropdown">
+              <button class="menu-btn anywhere-studio-trigger" id="menu-btn-anywhere"><span class="item-icon">🌍</span> <span id="hdr-active-profile-name">Campus</span> ▾</button>
+              <div class="dropdown-menu" id="dropdown-anywhere">
+                <button class="dropdown-item" id="item-open-studio"><span class="item-icon">🚀</span> Launch Anywhere Deployment Studio</button>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-section-title" style="padding:0.4rem 0.75rem;font-size:0.7rem;color:var(--text-secondary);font-weight:700;text-transform:uppercase;">Deploy Environment</div>
+                <button class="dropdown-item btn-quick-profile" data-profile="Classroom"><span class="item-icon">🏫</span> Classroom / Office</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Hospital"><span class="item-icon">🏥</span> Hospital / Cleanroom</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Industrial"><span class="item-icon">🏭</span> Industrial / Workshop</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Kitchen"><span class="item-icon">🍳</span> Commercial Kitchen</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Greenhouse"><span class="item-icon">🌱</span> Smart Greenhouse</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Transit"><span class="item-icon">🚇</span> Transit Hub / Metro</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Residential"><span class="item-icon">🏡</span> Residential Home</button>
+                <button class="dropdown-item btn-quick-profile" data-profile="Campus"><span class="item-icon">🌳</span> Campus / Smart City</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center: Live Telemetry Heartbeat Stats -->
+        <div class="header-center-stats">
+          <div class="stat-pill cloud-zero" title="100% On-Device Neural Compute">
+            <span class="pulse-dot"></span>
+            <span class="pill-label">Cloud</span>
+            <span class="pill-val">0% Offline</span>
+          </div>
+          <div class="stat-pill" title="Hardware Loop Inference Latency">
+            <span class="pill-label">Latency</span>
+            <span class="pill-val" id="val-latency">— ms</span>
+          </div>
+          <div class="stat-pill" title="LiFePO4 Dual-Rail Battery Reserve">
+            <span class="pill-label">LiFePO₄</span>
+            <span class="pill-val" id="val-battery">—% • —V</span>
+          </div>
+          <div class="stat-pill connection-pill" id="connection-pill" title="Campus Node Heartbeat">
+            <span class="conn-dot" id="conn-dot"></span>
+            <span class="pill-val" id="conn-label">Connecting…</span>
+          </div>
+        </div>
+
+        <!-- Right: Scenario Simulator Selector & Theme Toggle -->
+        <div class="header-controls">
+          <div class="scenario-selector-wrap">
+            <label for="scenario-select" class="control-label">Scenario:</label>
+            <select id="scenario-select" class="scenario-dropdown" aria-label="Simulate Environmental Scenario">
+              <option value="Clean Baseline">🌿 Clean Baseline Air</option>
+              <option value="Traffic Jam">🚗 Heavy Traffic Jam (NO₂ Spike)</option>
+              <option value="Garbage Fire">🔥 Illegal Garbage Fire (VOC/CO)</option>
+              <option value="Construction Dust">🏗️ Construction Excavation (PM10)</option>
+              <option value="Cooking Smoke">🍳 Kitchen / Cooking Smoke (CO₂)</option>
+              <option value="Crop Residue">🌾 Stubble / Crop Residue Smoke</option>
+            </select>
+          </div>
+
+          <button class="voice-assistant-hdr-btn" id="btn-open-voice-modal" aria-label="Ask AeroSense Voice Assistant" title="Open On-Device Offline Voice Assistant">
+            <span class="voice-icon">🎙️</span>
+            <span class="voice-label">Ask Voice AI</span>
+          </button>
+
+          <button class="voice-toggle-btn" id="voice-toggle-btn" aria-label="Toggle Voice Advisory Audio" title="Toggle Speech Audio Advisory Synthesis">
+            <span class="voice-icon" id="voice-icon">🔊</span>
+            <span class="voice-label">Voice Alerts</span>
+          </button>
+
+          <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Dark and Light Theme" title="Toggle Light/Dark Theme (⌘T)">
+            <span class="theme-icon" id="theme-icon">☀️</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tier 2: Apple Segmented Navigation Controls & Quick Search Filter -->
+      <div class="header-nav-toolbar">
+        <nav class="header-nav-tabs" aria-label="Section Navigation">
+          <a href="#overview" class="nav-tab-pill active">Overview</a>
+          <a href="#source-attribution-card" class="nav-tab-pill">AI Fingerprint</a>
+          <a href="#plume-vector-card" class="nav-tab-pill">Plume Radar</a>
+          <a href="#acoustic-optical-card" class="nav-tab-pill">Acoustic &amp; Haze</a>
+          <a href="#forecast-section" class="nav-tab-pill">6h Forecast</a>
+          <a href="#mpc-card" class="nav-tab-pill">MPC Control</a>
+          <a href="#audit-ledger-card" class="nav-tab-pill">Merkle Ledger</a>
+          <a href="#advisory-section" class="nav-tab-pill">Advisories</a>
+          <a href="#anywhere-section" class="nav-tab-pill" id="nav-tab-anywhere">Anywhere Studio</a>
+          <a href="#telemetry-section" class="nav-tab-pill">Telemetry</a>
+          <a href="#campus-mesh-section" class="nav-tab-pill">Mesh Map</a>
+          <!-- v1.5.0 Tier-1 Tabs -->
+          <a href="#health-score-card" class="nav-tab-pill">Health Score</a>
+          <a href="#city-heatmap-card" class="nav-tab-pill">City Heatmap</a>
+          <a href="#sleep-mode-card" class="nav-tab-pill">Sleep Mode</a>
+          <a href="#smart-alerts-card" class="nav-tab-pill">Smart Alerts</a>
+        </nav>
+
+        <div class="header-search-wrap">
+          <svg class="search-icon-svg" viewBox="0 0 24 24"><path d="M10 18a7.952 7.952 0 0 0 4.897-1.688l4.396 4.396 1.414-1.414-4.396-4.396A7.952 7.952 0 0 0 18 10c0-4.411-3.589-8-8-8s-8 3.589-8 8 3.589 8 8 8zm0-14c3.309 0 6 2.691 6 6s-2.691 6-6 6-6-2.691-6-6 2.691-6 6-6z"/></svg>
+          <input type="search" id="quick-search-input" class="search-input" placeholder="Search parameters (⌘K)…" aria-label="Search telemetry metrics">
+        </div>
+      </div>
+
+      <!-- Tier 3: Judge Test Drive Preset Bar -->
+      <div class="judge-demo-bar" id="judge-demo-bar">
+        <span class="judge-badge">⚡ JUDGE TEST DRIVE:</span>
+        <button class="judge-btn active" data-scenario="Clean Baseline">🌿 Clean Air</button>
+        <button class="judge-btn" data-scenario="Garbage Fire">🔥 Garbage Burning</button>
+        <button class="judge-btn" data-scenario="Traffic Jam">🚗 Traffic Bottleneck</button>
+        <button class="judge-btn" data-scenario="Construction Dust">🏗️ Dust Storm</button>
+        <button class="judge-btn" data-scenario="Crop Residue">🌾 Crop Residue</button>
+        <button class="judge-btn studio-btn" id="btn-judge-open-anywhere" style="background:linear-gradient(135deg,rgba(100,210,255,0.25),rgba(48,209,88,0.25));border-color:var(--apple-green);color:#FFF;font-weight:700;"><span class="icon">🌍</span> Anywhere Studio</button>
+        <button class="judge-btn report-btn" id="btn-judge-incident-report"><span class="icon">📄</span> Audit Report</button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Apple Keynote Hero Statement Section -->
+  <section class="hero-statement-section" id="overview">
+    <div class="hero-eyebrow">Autonomous Edge Intelligence</div>
+    <h2 class="hero-statement-title">Pure air intelligence. Reimagined at the edge.</h2>
+    <p class="hero-statement-subtitle">
+      Zero cloud servers. Zero recurring API costs. 100% deterministic on-device sensor fusion, neural source attribution, and 6-hour hyperlocal forecasting running entirely on Arduino UNO Q.
+    </p>
+    <div class="hero-feature-pills">
+      <div class="feature-pill"><span class="icon">✨</span> Dual-Core Qualcomm QRB2210 + STM32U585</div>
+      <div class="feature-pill"><span class="icon">⚡</span> Sub-Millisecond Neural Inference</div>
+      <div class="feature-pill"><span class="icon">🔒</span> Air-Gapped Privacy &amp; 30-Day Storage</div>
+      <div class="feature-pill"><span class="icon">📡</span> Zero-Cloud P2P Mesh Topology</div>
+    </div>
+
+    <!-- 3D Interactive Station Spatial Badge -->
+    <div class="station-3d-badge" id="station-3d-hero-badge" title="Click to inspect 3D Hardware Specs">
+      <span style="font-size:1.15rem">⚡</span>
+      <span><strong>Arduino UNO Q Station</strong> • Interactive 3D Spatial Architecture</span>
+      <span style="font-size:0.68rem;background:rgba(48,209,88,0.2);color:var(--apple-green);padding:0.18rem 0.55rem;border-radius:9999px;font-weight:700;">3D PARALLAX</span>
+    </div>
+  </section>
+
+  <!-- Apple Dynamic Island / SOS Emergency Alert Banner -->
+  <div class="urgent-banner hidden" id="urgent-alert-banner" role="alert">
+    <div class="dynamic-island-alert">
+      <span class="alert-icon">⚠️</span>
+      <span id="urgent-alert-text">High particulate smoke plume detected upwind.</span>
+    </div>
+  </div>
+
+  <!-- Main Bento Grid Container -->
+  <main class="dashboard-grid" role="main">
+
+    <!-- Bento 1: Primary AQI Activity Ring Gauge -->
+    <section class="card glass-card card-3d-wrap hero-aqi-col aqi-hero-card" aria-label="Hyperlocal Air Quality Index">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Hyperlocal AQI</h3>
+          <span class="standard-pill-badge" id="aqi-standard-badge" title="Click to change AQI standard">NAQI</span>
+        </div>
+        <span class="card-tag" id="aqi-timestamp">Live • 1 Hz</span>
+      </div>
+
+      <div class="aqi-gauge-wrapper" role="meter" aria-label="Air Quality Index" aria-valuenow="42" aria-valuemin="0" aria-valuemax="500">
+        <svg class="radial-gauge" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="80" class="gauge-bg"/>
+          <circle cx="100" cy="100" r="80" class="gauge-fill" id="gauge-fill-arc"/>
+        </svg>
+        <div class="gauge-center-content">
+          <span class="aqi-number" id="aqi-display" aria-live="polite">—</span>
+          <span class="aqi-category-badge" id="aqi-category-badge">—</span>
+          <span class="aqi-pollutant" id="aqi-primary-pollutant">Prominent: —</span>
+        </div>
+      </div>
+
+      <div class="aqi-scale-bar" role="presentation">
+        <div class="scale-segment good"  title="0-50 Good"></div>
+        <div class="scale-segment sat"   title="51-100 Satisfactory"></div>
+        <div class="scale-segment mod"   title="101-200 Moderate"></div>
+        <div class="scale-segment poor"  title="201-300 Poor"></div>
+        <div class="scale-segment vpoor" title="301-400 Very Poor"></div>
+        <div class="scale-segment severe"title="401-500 Severe"></div>
+      </div>
+
+      <!-- AQI History Sparkline -->
+      <div class="sparkline-section">
+        <div class="sparkline-header">
+          <span class="sub-heading">60-Second Real-Time Trend</span>
+          <span class="sparkline-range" id="sparkline-range">—</span>
+        </div>
+        <canvas id="sparkline-canvas" class="sparkline-canvas" width="260" height="48" aria-label="AQI history sparkline chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Bento 2: Edge AI Source Attribution Fingerprint Card -->
+    <section class="card glass-card card-3d-wrap hero-source-col source-card" id="source-attribution-card" aria-label="AI Source Attribution">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">AI Source Attribution</h3>
+          <span class="ai-status-chip">On-Device Quantized Model</span>
+        </div>
+        <div class="confidence-badge" id="source-confidence-badge">—% Confidence</div>
+      </div>
+
+      <div class="source-result-box" id="source-result-box">
+        <div class="source-icon-container" id="source-icon-container">🌿</div>
+        <div class="source-details">
+          <h4 class="source-name" id="source-name">—</h4>
+          <p class="source-desc" id="source-desc">Initialising sensor pipeline…</p>
+        </div>
+      </div>
+
+      <!-- Chemical Stoichiometric Signature Bars -->
+      <div class="chemical-fingerprints">
+        <div class="sub-heading">Stoichiometric Fingerprints:</div>
+
+        <div class="fingerprint-row">
+          <div class="fp-labels">
+            <span>Fine Particle Ratio (PM<sub>2.5</sub>/PM<sub>10</sub>)</span>
+            <span id="fp-pm-ratio-val">—</span>
+          </div>
+          <div class="fp-bar-track">
+            <div class="fp-bar-fill" id="fp-pm-ratio-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="fingerprint-row">
+          <div class="fp-labels">
+            <span>Combustion Inefficiency (CO/CO<sub>2</sub>)</span>
+            <span id="fp-co-ratio-val">—</span>
+          </div>
+          <div class="fp-bar-track">
+            <div class="fp-bar-fill" id="fp-co-ratio-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="fingerprint-row">
+          <div class="fp-labels">
+            <span>Traffic NOₓ-to-VOC Index (NO<sub>2</sub>/VOC)</span>
+            <span id="fp-no2-ratio-val">—</span>
+          </div>
+          <div class="fp-bar-track">
+            <div class="fp-bar-fill" id="fp-no2-ratio-bar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explainable AI (XAI) Evidence Chips -->
+      <div class="xai-container">
+        <div class="sub-heading">Explainable AI Evidence:</div>
+        <div class="xai-chips" id="xai-chips-list" aria-live="polite">
+          <span class="xai-chip">Awaiting sensor convergence…</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento 3: Hyperlocal 6-Hour Time-Series Forecasting Card -->
+    <section class="card glass-card card-3d-wrap forecast-col forecast-card" id="forecast-section" aria-label="6-Hour Forecast">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Hyperlocal 6-Hour Forecast</h3>
+          <span class="card-tag">On-Device TCN</span>
+        </div>
+        <span class="trend-pill" id="forecast-trend-pill">Trend: —</span>
+      </div>
+
+      <p class="forecast-sub">Projected atmospheric boundary layer &amp; diurnal trend — 100% offline:</p>
+
+      <div class="forecast-timeline" id="forecast-timeline" aria-live="polite">
+        <!-- Populated dynamically by app.js -->
+      </div>
+
+      <div class="forecast-diurnal-tip" id="forecast-tip">
+        <span class="tip-icon">💡</span>
+        <span id="forecast-tip-text">Best natural ventilation window: <strong>14:00 – 16:00</strong> during solar atmospheric boundary lifting.</span>
+      </div>
+    </section>
+
+    <!-- Bento 4: Edge AI Hardware Execution & Quantization Benchmark Card -->
+    <section class="card glass-card card-3d-wrap benchmark-card" id="ai-benchmark-card" aria-label="Edge AI Performance Benchmark">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Edge AI Diagnostics</h3>
+          <span class="card-tag">Arduino UNO Q Hardware</span>
+        </div>
+        <span class="benchmark-live-chip">0% Cloud • Air-Gapped</span>
+      </div>
+
+      <div class="benchmark-metrics-grid">
+        <div class="metric-box">
+          <span class="metric-label">Inference Time</span>
+          <span class="metric-val" id="bm-latency">0.82 ms</span>
+          <span class="metric-sub">Sub-Millisecond Edge</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">RAM Footprint</span>
+          <span class="metric-val" id="bm-ram">112 KB</span>
+          <span class="metric-sub">Qualcomm QRB2210</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Quantization</span>
+          <span class="metric-val">INT8 Fixed</span>
+          <span class="metric-sub">Zero Float Overhead</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">MCU Polling</span>
+          <span class="metric-val">160 MHz DMA</span>
+          <span class="metric-sub">STM32U585 Core</span>
+        </div>
+      </div>
+
+      <div class="benchmark-comparison-bar">
+        <div class="cmp-header">
+          <span>Latency vs. Cloud Roundtrip</span>
+          <span class="cmp-saving">99.6% Faster</span>
+        </div>
+        <div class="cmp-track">
+          <div class="cmp-fill edge-fill" style="width: 2%"><span>Edge: 0.8ms</span></div>
+          <div class="cmp-fill cloud-fill" style="width: 98%"><span>AWS Cloud: 240ms</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento 5: Micro-Atmospheric Gaussian Plume Dispersion & Origin Vectoring Radar -->
+    <section class="card glass-card card-3d-wrap plume-card" id="plume-vector-card" aria-label="Micro-Plume Origin Vectoring Radar">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Hyperlocal Plume Radar</h3>
+          <span class="card-tag">Gaussian Vectoring</span>
+        </div>
+        <span class="plume-live-badge" id="plume-status-badge">⚡ Real-Time Tracking</span>
+      </div>
+
+      <div class="plume-radar-layout">
+        <!-- SVG Radar Scope -->
+        <div class="radar-scope-container">
+          <svg class="radar-scope-svg" viewBox="0 0 240 240" id="radar-scope-svg">
+            <defs>
+              <radialGradient id="radarSweepGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#30D158" stop-opacity="0.35"/>
+                <stop offset="60%" stop-color="#64D2FF" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="plumeVectorGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#FF453A" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="#FF453A" stop-opacity="0.9"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Background rings -->
+            <circle cx="120" cy="120" r="100" class="radar-ring r-1km"/>
+            <circle cx="120" cy="120" r="75"  class="radar-ring r-300m"/>
+            <circle cx="120" cy="120" r="50"  class="radar-ring r-150m"/>
+            <circle cx="120" cy="120" r="25"  class="radar-ring r-50m"/>
+
+            <!-- Compass Crosshairs -->
+            <line x1="120" y1="15"  x2="120" y2="225" class="radar-axis"/>
+            <line x1="15"  y1="120" x2="225" y2="120" class="radar-axis"/>
+
+            <!-- Cardinal text labels -->
+            <text x="120" y="12"  class="radar-label" text-anchor="middle">N</text>
+            <text x="232" y="124" class="radar-label" text-anchor="start">E</text>
+            <text x="120" y="238" class="radar-label" text-anchor="middle">S</text>
+            <text x="8"   y="124" class="radar-label" text-anchor="end">W</text>
+
+            <!-- Range text tags -->
+            <text x="123" y="97"  class="radar-dist-tag">50m</text>
+            <text x="123" y="72"  class="radar-dist-tag">150m</text>
+            <text x="123" y="47"  class="radar-dist-tag">300m</text>
+            <text x="123" y="22"  class="radar-dist-tag">1km</text>
+
+            <!-- Rotating Radar Sweep Line -->
+            <line x1="120" y1="120" x2="120" y2="20" class="radar-sweep-beam" id="radar-sweep-beam"/>
+
+            <!-- Dynamic Gaussian Dispersion Plume Cone & Vector Arrow -->
+            <g id="plume-vector-group" transform="rotate(235, 120, 120)">
+              <!-- Plume Cone Wedge -->
+              <path d="M 120 120 L 105 40 A 85 85 0 0 1 135 40 Z" fill="url(#plumeVectorGrad)" class="plume-cone-path" id="plume-cone-path"/>
+              <!-- Origin Vector Arrow -->
+              <line x1="120" y1="120" x2="120" y2="35" stroke="#FF453A" stroke-width="3.5" stroke-linecap="round" class="plume-vector-line"/>
+              <!-- Emission Center Blip -->
+              <circle cx="120" cy="40" r="5.5" fill="#FF453A" class="plume-target-blip" id="plume-target-blip"/>
+            </g>
+
+            <!-- Station Center Node -->
+            <circle cx="120" cy="120" r="7" class="radar-center-outer"/>
+            <circle cx="120" cy="120" r="3.5" class="radar-center-inner"/>
+          </svg>
+        </div>
+
+        <!-- Radar Stats & Metrics Panel -->
+        <div class="plume-stats-panel">
+          <div class="plume-origin-banner">
+            <div class="plume-bearing-readout">
+              <span class="bearing-deg" id="plume-bearing-val">235°</span>
+              <span class="bearing-cardinal" id="plume-cardinal-val">WSW</span>
+            </div>
+            <div class="plume-meta-block">
+              <span class="plume-source-label" id="plume-source-name">Garbage Burning</span>
+              <span class="plume-zone-tag" id="plume-zone-tag">Localized Zone (50 - 300m)</span>
+            </div>
+          </div>
+
+          <div class="plume-metric-subgrid">
+            <div class="plume-sub-box">
+              <span class="label">Upwind Distance</span>
+              <span class="val" id="plume-distance-val">~140 m</span>
+            </div>
+            <div class="plume-sub-box">
+              <span class="label">Lateral Spread</span>
+              <span class="val" id="plume-width-val">28.0 m</span>
+            </div>
+            <div class="plume-sub-box">
+              <span class="label">Atmospheric Class</span>
+              <span class="val" id="plume-stability-val">Pasquill-B</span>
+            </div>
+            <div class="plume-sub-box">
+              <span class="label">Vector Confidence</span>
+              <span class="val text-emerald" id="plume-confidence-val">91.0%</span>
+            </div>
+          </div>
+
+          <!-- Municipal / RWA Dispatch Directive -->
+          <div class="plume-directive-card" id="plume-directive-card">
+            <div class="directive-hdr">
+              <span class="directive-icon">🚨</span>
+              <span class="directive-title">DISPATCH DIRECTIVE</span>
+            </div>
+            <p class="directive-body" id="plume-directive-text">
+              Active burning plume detected at 235° (WSW), ~140m upwind. Dispatch RWA security patrol immediately.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento 6: Multi-Modal 16-Band Audio-FFT Equalizer & Optical Extinction Haze Card -->
+    <section class="card glass-card card-3d-wrap acoustic-optical-card" id="acoustic-optical-card" aria-label="Acoustic Spectrum &amp; Optical Haze Sensor Fusion">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Acoustic Audio-FFT &amp; Optical Haze</h3>
+          <span class="card-tag">Multi-Modal Fusion</span>
+        </div>
+        <span class="acoustic-sig-chip" id="acoustic-sig-badge">Vehicular Traffic Rumble</span>
+      </div>
+
+      <!-- Part 1: 16-Band Audio-FFT Equalizer -->
+      <div class="acoustic-equalizer-section">
+        <div class="eq-header">
+          <span class="sub-heading">16-Band Audio Spectral Density (31 Hz – 16 kHz):</span>
+          <span class="centroid-badge" id="spectral-centroid-val">Centroid: 420 Hz</span>
+        </div>
+
+        <div class="equalizer-bars-container" id="equalizer-bars-container">
+          <!-- 16 dynamically animated frequency bars -->
+        </div>
+
+        <div class="eq-sub-bands">
+          <div class="eq-band-pill">
+            <span class="dot" style="background:#F97316;"></span>
+            <span>Low (Traffic Rumble): <strong id="eq-low-val">0.58</strong></span>
+          </div>
+          <div class="eq-band-pill">
+            <span class="dot" style="background:#EAB308;"></span>
+            <span>Mid (Machine Hum): <strong id="eq-mid-val">0.24</strong></span>
+          </div>
+          <div class="eq-band-pill">
+            <span class="dot" style="background:#8B5CF6;"></span>
+            <span>High (Culinary Sizzle): <strong id="eq-high-val">0.08</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part 2: Koschmieder Optical Extinction & Atmospheric Haze -->
+      <div class="optical-haze-section">
+        <div class="optical-haze-header">
+          <span class="sub-heading">Koschmieder Visual Range &amp; Atmospheric Extinction:</span>
+          <span class="haze-status-pill" id="optical-haze-status">Moderate Particulate Smog</span>
+        </div>
+
+        <div class="optical-metrics-grid">
+          <div class="optical-metric-box">
+            <span class="metric-label">Visual Range (V<sub>R</sub>)</span>
+            <span class="metric-val" id="val-visual-range">4.8 km</span>
+            <span class="metric-sub">Koschmieder Equation</span>
+          </div>
+          <div class="optical-metric-box">
+            <span class="metric-label">Extinction Coeff (β<sub>ext</sub>)</span>
+            <span class="metric-val" id="val-extinction-coeff">0.815 km⁻¹</span>
+            <span class="metric-sub">Light Scattering + Absorption</span>
+          </div>
+          <div class="optical-metric-box">
+            <span class="metric-label">Contrast Attenuation</span>
+            <span class="metric-val" id="val-contrast-loss">42.5%</span>
+            <span class="metric-sub">Horizon Visual Degradation</span>
+          </div>
+          <div class="optical-metric-box">
+            <span class="metric-label">AOD Surrogate</span>
+            <span class="metric-val" id="val-aod-surrogate">0.65</span>
+            <span class="metric-sub">Aerosol Optical Depth</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento 7: Model Predictive Control (MPC) 4-Channel Preemptive Protection Card -->
+    <section class="card glass-card card-3d-wrap mpc-card" id="mpc-card" aria-label="Model Predictive Control (MPC) Preemptive Relay Actuation">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Model Predictive Control (MPC)</h3>
+          <span class="card-tag">Lookahead Preemption</span>
+        </div>
+        <span class="mpc-state-pill" id="mpc-state-badge">⚡ Preemption Active</span>
+      </div>
+
+      <!-- MPC Anticipated Peak Warning Banner -->
+      <div class="mpc-banner" id="mpc-banner">
+        <div class="mpc-banner-icon">⏳</div>
+        <div class="mpc-banner-content">
+          <h4 class="mpc-banner-title" id="mpc-banner-title">Anticipating PM2.5 Surge (+1h Horizon)</h4>
+          <p class="mpc-banner-desc" id="mpc-banner-desc">
+            Forecasting engine projects PM2.5 rise to 68 µg/m³. HEPA purifiers preemptively energized 25 minutes in advance to build clean indoor pressure.
+          </p>
+        </div>
+        <div class="mpc-lead-time" id="mpc-lead-time">
+          <span class="time-val">25</span>
+          <span class="time-unit">min lead</span>
+        </div>
+      </div>
+
+      <!-- 4 Hardware Relay Channels on Arduino UNO Q Shield -->
+      <div class="mpc-relays-grid">
+        <!-- Relay 1 -->
+        <div class="relay-card" id="mpc-relay-1">
+          <div class="relay-top">
+            <span class="relay-num">RELAY #1</span>
+            <span class="relay-status-badge" id="mpc-badge-1">OFF</span>
+          </div>
+          <h5 class="relay-title">Kitchen / Exhaust Fan</h5>
+          <p class="relay-purpose">Automatic flush on elevated VOC / CO₂</p>
+          <button class="btn-relay-actuate" id="btn-mpc-toggle-1" data-relay="1">Toggle Manual</button>
+        </div>
+
+        <!-- Relay 2 -->
+        <div class="relay-card active" id="mpc-relay-2">
+          <div class="relay-top">
+            <span class="relay-num">RELAY #2</span>
+            <span class="relay-status-badge active" id="mpc-badge-2">ON (PREEMPTIVE)</span>
+          </div>
+          <h5 class="relay-title">HEPA Air Purifier / Mist</h5>
+          <p class="relay-purpose">Preemptive surge mitigation &amp; PM2.5 scrub</p>
+          <button class="btn-relay-actuate" id="btn-mpc-toggle-2" data-relay="2">Toggle Manual</button>
+        </div>
+
+        <!-- Relay 3 -->
+        <div class="relay-card" id="mpc-relay-3">
+          <div class="relay-top">
+            <span class="relay-num">RELAY #3</span>
+            <span class="relay-status-badge" id="mpc-badge-3">OFF</span>
+          </div>
+          <h5 class="relay-title">Emergency Warning Siren</h5>
+          <p class="relay-purpose">Audible alert on toxic CO/NO₂ spikes</p>
+          <button class="btn-relay-actuate" id="btn-mpc-toggle-3" data-relay="3">Toggle Manual</button>
+        </div>
+
+        <!-- Relay 4 -->
+        <div class="relay-card" id="mpc-relay-4">
+          <div class="relay-top">
+            <span class="relay-num">RELAY #4</span>
+            <span class="relay-status-badge" id="mpc-badge-4">OFF</span>
+          </div>
+          <h5 class="relay-title">HVAC Auxiliary Damper</h5>
+          <p class="relay-purpose">Seals windward intake louvers during smoke plumes</p>
+          <button class="btn-relay-actuate" id="btn-mpc-toggle-4" data-relay="4">Toggle Manual</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento 8: Tamper-Proof Cryptographic SHA-256 Merkle Audit Ledger Card -->
+    <section class="card glass-card card-3d-wrap audit-ledger-card" id="audit-ledger-card" aria-label="Cryptographic SHA-256 Merkle Audit Ledger">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Cryptographic Audit Ledger</h3>
+          <span class="card-tag">SHA-256 Merkle Chain</span>
+        </div>
+        <span class="ledger-verified-chip" id="ledger-verified-badge">🟢 SECURE_VERIFIED</span>
+      </div>
+
+      <div class="ledger-summary-banner">
+        <div class="seal-icon">🏛️</div>
+        <div class="seal-text">
+          <h4>Regulatory Non-Repudiation Environmental Chain</h4>
+          <p>Every sensor frame is hashed and reduced pairwise into an immutable Merkle tree. Fully tamper-proof for CPCB, WHO, and US EPA compliance reporting.</p>
+        </div>
+      </div>
+
+      <div class="ledger-hashes-grid">
+        <div class="hash-box">
+          <span class="hash-label">Current Merkle Root:</span>
+          <span class="hash-code" id="ledger-merkle-root">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+        </div>
+        <div class="hash-box">
+          <span class="hash-label">Latest Linked Block Hash:</span>
+          <span class="hash-code" id="ledger-block-hash">a68b974ac61141659203f36f6949751f042e88a319024f92376dcba90123ef45</span>
+        </div>
+      </div>
+
+      <div class="ledger-stats-row">
+        <div class="stat-pill-sm">
+          <span>Verified Blocks:</span>
+          <strong id="ledger-block-count">24 Blocks</strong>
+        </div>
+        <div class="stat-pill-sm">
+          <span>Cryptographic Proof:</span>
+          <strong class="text-emerald">Zero Cloud Tampering</strong>
+        </div>
+        <div class="stat-pill-sm">
+          <span>WHO PM2.5 Compliance:</span>
+          <strong id="ledger-compliance-pct">95.4%</strong>
+        </div>
+      </div>
+
+      <div class="ledger-actions-row">
+        <button class="btn-verify-ledger" id="btn-verify-ledger">🔒 Re-Verify SHA-256 Merkle Chain</button>
+        <button class="btn-export-cert" id="btn-export-certificate">📜 Export CPCB/EPA Certificate</button>
+      </div>
+    </section>
+
+    <!-- Row 2: Actionable Daily Guidance & Persona Widgets -->
+    <section class="card glass-card card-3d-wrap grid-col-full advisory-section" id="advisory-section" aria-label="Actionable Advisory">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Context-Aware Actionable Advisory</h3>
+          <span class="advisory-live-tag">Edge Expert Engine</span>
+        </div>
+        <div class="advisory-headline-chip" id="advisory-headline" aria-live="polite">Initialising advisory engine…</div>
+      </div>
+
+      <!-- 3-Column Apple Widget Grid -->
+      <div class="persona-grid">
+        <!-- Widget 1: Citizen & Commuter -->
+        <div class="persona-card">
+          <div class="persona-header">
+            <span class="persona-icon">🏃</span>
+            <div>
+              <h4 class="persona-title">Citizens &amp; Joggers</h4>
+              <span class="persona-sub">Daily Life &amp; Transit</span>
+            </div>
+          </div>
+          <ul class="action-list" id="citizen-action-list" aria-live="polite">
+            <li>Waiting for sensor telemetry…</li>
+          </ul>
+        </div>
+
+        <!-- Widget 2: Schools & Children -->
+        <div class="persona-card">
+          <div class="persona-header">
+            <span class="persona-icon">🏫</span>
+            <div>
+              <h4 class="persona-title">Schools &amp; Daycares</h4>
+              <span class="persona-sub">Recess &amp; Classroom Safety</span>
+            </div>
+          </div>
+          <ul class="action-list" id="school-action-list" aria-live="polite">
+            <li>Waiting for sensor telemetry…</li>
+          </ul>
+        </div>
+
+        <!-- Widget 3: RWA & Municipality -->
+        <div class="persona-card">
+          <div class="persona-header">
+            <span class="persona-icon">🏛️</span>
+            <div>
+              <h4 class="persona-title">RWA &amp; Local Body</h4>
+              <span class="persona-sub">Source Mitigation &amp; Fix</span>
+            </div>
+          </div>
+          <ul class="action-list" id="community-action-list" aria-live="polite">
+            <li>Waiting for sensor telemetry…</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 3: Extended Multi-Pollutant Live Telemetry Matrix (12 Parameters) -->
+    <section class="card glass-card card-3d-wrap grid-col-full telemetry-section" id="telemetry-section" aria-label="Sensor Telemetry">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Multi-Sensor Telemetry Matrix</h3>
+          <span class="card-tag">STM32U585 Hardware DMA Polled</span>
+        </div>
+        <span class="card-tag">12 Channels Calibrated</span>
+      </div>
+
+      <div class="telemetry-grid">
+        <!-- PM1.0 -->
+        <div class="sensor-cell" data-param="pm1">
+          <div class="sensor-top">
+            <span class="sensor-name">PM1.0 (Ultrafine)</span>
+            <span class="sensor-unit">µg/m³</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-pm1">—</span>
+            <span class="sensor-sub-pill good" id="status-pm1">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-pm1" style="width:0%"></div></div>
+        </div>
+
+        <!-- PM2.5 -->
+        <div class="sensor-cell" data-param="pm25">
+          <div class="sensor-top">
+            <span class="sensor-name">PM2.5 (Fine)</span>
+            <span class="sensor-unit">µg/m³</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-pm25">—</span>
+            <span class="sensor-sub-pill good" id="status-pm25">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-pm25" style="width:0%"></div></div>
+        </div>
+
+        <!-- PM10 -->
+        <div class="sensor-cell" data-param="pm10">
+          <div class="sensor-top">
+            <span class="sensor-name">PM10 (Coarse)</span>
+            <span class="sensor-unit">µg/m³</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-pm10">—</span>
+            <span class="sensor-sub-pill good" id="status-pm10">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-pm10" style="width:0%"></div></div>
+        </div>
+
+        <!-- NO2 -->
+        <div class="sensor-cell" data-param="no2">
+          <div class="sensor-top">
+            <span class="sensor-name">Nitrogen Dioxide (NO<sub>2</sub>)</span>
+            <span class="sensor-unit">ppm</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-no2">—</span>
+            <span class="sensor-sub-pill good" id="status-no2">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-no2" style="width:0%"></div></div>
+        </div>
+
+        <!-- Carbon Monoxide -->
+        <div class="sensor-cell" data-param="co">
+          <div class="sensor-top">
+            <span class="sensor-name">Carbon Monoxide (CO)</span>
+            <span class="sensor-unit">ppm</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-co">—</span>
+            <span class="sensor-sub-pill good" id="status-co">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-co" style="width:0%"></div></div>
+        </div>
+
+        <!-- CO2 -->
+        <div class="sensor-cell" data-param="co2">
+          <div class="sensor-top">
+            <span class="sensor-name">Carbon Dioxide (CO<sub>2</sub>)</span>
+            <span class="sensor-unit">ppm</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-co2">—</span>
+            <span class="sensor-sub-pill good" id="status-co2">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-co2" style="width:0%"></div></div>
+        </div>
+
+        <!-- Ammonia NH3 -->
+        <div class="sensor-cell" data-param="nh3">
+          <div class="sensor-top">
+            <span class="sensor-name">Ammonia (NH<sub>3</sub>)</span>
+            <span class="sensor-unit">ppm</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-nh3">—</span>
+            <span class="sensor-sub-pill good" id="status-nh3">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-nh3" style="width:0%"></div></div>
+        </div>
+
+        <!-- VOC Index -->
+        <div class="sensor-cell" data-param="voc">
+          <div class="sensor-top">
+            <span class="sensor-name">VOC Index (BME688)</span>
+            <span class="sensor-unit">Index</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-voc">—</span>
+            <span class="sensor-sub-pill good" id="status-voc">—</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-voc" style="width:0%"></div></div>
+        </div>
+
+        <!-- Temperature -->
+        <div class="sensor-cell" data-param="temp">
+          <div class="sensor-top">
+            <span class="sensor-name">Temperature</span>
+            <span class="sensor-unit">°C</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-temp">—</span>
+            <span class="sensor-sub-pill neutral">Ambient</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-temp" style="width:0%"></div></div>
+        </div>
+
+        <!-- Humidity -->
+        <div class="sensor-cell" data-param="hum">
+          <div class="sensor-top">
+            <span class="sensor-name">Relative Humidity</span>
+            <span class="sensor-unit">% RH</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-hum">—</span>
+            <span class="sensor-sub-pill neutral">Comfortable</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-hum" style="width:0%"></div></div>
+        </div>
+
+        <!-- Barometric Pressure -->
+        <div class="sensor-cell" data-param="pressure">
+          <div class="sensor-top">
+            <span class="sensor-name">Barometric Pressure</span>
+            <span class="sensor-unit">hPa</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-pres">—</span>
+            <span class="sensor-sub-pill neutral" id="status-pres">1013 hPa</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-pres" style="width:0%"></div></div>
+        </div>
+
+        <!-- Power / Battery -->
+        <div class="sensor-cell" data-param="battery">
+          <div class="sensor-top">
+            <span class="sensor-name">LiFePO₄ Battery &amp; Solar</span>
+            <span class="sensor-unit">V / %</span>
+          </div>
+          <div class="sensor-val-row">
+            <span class="sensor-val" id="val-bat-tile">—</span>
+            <span class="sensor-sub-pill good" id="status-bat-tile">Nominal</span>
+          </div>
+          <div class="sensor-bar"><div class="bar-fill" id="bar-bat-tile" style="width:0%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 4: Interactive Historical Analytics & Multi-Parameter Graph -->
+    <section class="card glass-card card-3d-wrap grid-col-full analytics-card" id="analytics-section" aria-label="Historical Telemetry Analytics">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Historical Analytics &amp; Parameter Trends</h3>
+          <span class="card-tag">Circular SQLite Memory Buffer</span>
+        </div>
+        <div class="chart-tab-group">
+          <button class="chart-tab-btn active" data-chart-mode="aqi_pm">AQI &amp; Particulates</button>
+          <button class="chart-tab-btn" data-chart-mode="gases">Combustion Gases</button>
+          <button class="chart-tab-btn" data-chart-mode="climate">Atmospheric Climate</button>
+        </div>
+      </div>
+
+      <p class="forecast-sub" id="analytics-sub">Real-time dynamic trend visualization over the last 60 seconds (1 Hz):</p>
+
+      <div class="analytics-chart-wrap">
+        <canvas id="analytics-canvas" class="analytics-canvas" width="1200" height="220" aria-label="Historical analytics multi-parameter chart"></canvas>
+      </div>
+
+      <div class="analytics-stats-strip">
+        <div class="stat-chip">
+          <span class="stat-chip-label">Current Metric</span>
+          <span class="stat-chip-val" id="stat-analytics-curr">—</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip-label">60s Minimum</span>
+          <span class="stat-chip-val" id="stat-analytics-min">—</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip-label">60s Maximum</span>
+          <span class="stat-chip-val" id="stat-analytics-max">—</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip-label">60s Average</span>
+          <span class="stat-chip-val text-emerald" id="stat-analytics-avg">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 5: Apple Maps Dark Mode Campus Mesh Map -->
+    <section class="card glass-card card-3d-wrap map-col" id="campus-mesh-section" aria-label="Campus Street Mesh Map">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Campus / Ward Street Mesh Map</h3>
+          <span class="card-tag">Zero Cloud Hosting</span>
+        </div>
+        <span class="mesh-count-badge" id="mesh-nodes-count">— Nodes</span>
+      </div>
+
+      <p class="forecast-sub">Decentralized P2P spatial interpolation across campus nodes (Click any node to inspect):</p>
+
+      <div class="campus-map-container" id="campus-map-container">
+        <svg class="campus-svg" viewBox="0 0 500 280" id="campus-svg-map" role="img" aria-label="Campus mesh node map">
+          <defs>
+            <radialGradient id="mapRadarPulse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#30D158" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#30D158" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Background Map Grid / Campus Roads -->
+          <rect width="500" height="280" fill="#0c0c0e" rx="16"/>
+          <path d="M 50 140 L 450 140 M 250 30 L 250 250 M 120 70 L 380 210" stroke="#1c1c1e" stroke-width="8" stroke-linecap="round"/>
+          <path d="M 50 140 L 450 140 M 250 30 L 250 250" stroke="#2c2c2e" stroke-width="2" stroke-dasharray="8 6"/>
+
+          <!-- Campus Buildings Outline -->
+          <rect x="70" y="50" width="70" height="50" fill="#18181b" stroke="#27272a" stroke-width="1" rx="6"/>
+          <text x="105" y="78" fill="#86868b" font-size="9" font-family="-apple-system, sans-serif" font-weight="500" text-anchor="middle">Academic</text>
+
+          <rect x="350" y="50" width="80" height="55" fill="#18181b" stroke="#27272a" stroke-width="1" rx="6"/>
+          <text x="390" y="80" fill="#86868b" font-size="9" font-family="-apple-system, sans-serif" font-weight="500" text-anchor="middle">Sports Complex</text>
+
+          <rect x="80" y="180" width="80" height="60" fill="#18181b" stroke="#27272a" stroke-width="1" rx="6"/>
+          <text x="120" y="212" fill="#86868b" font-size="9" font-family="-apple-system, sans-serif" font-weight="500" text-anchor="middle">West Block</text>
+
+          <rect x="340" y="175" width="75" height="55" fill="#18181b" stroke="#27272a" stroke-width="1" rx="6"/>
+          <text x="377" y="205" fill="#86868b" font-size="9" font-family="-apple-system, sans-serif" font-weight="500" text-anchor="middle">Canteen</text>
+
+          <!-- Dynamic Nodes will be drawn by app.js with radar rings -->
+          <g id="map-nodes-group"></g>
+        </svg>
+      </div>
+
+      <div class="mesh-node-list" id="mesh-nodes-list">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- Offline Resilience & Compression Monitor (Apple Metal / Instruments Style) -->
+    <section class="card glass-card card-3d-wrap sync-col" id="offline-sync-section" aria-label="Offline Sync &amp; Compression">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Offline Engine &amp; Compression</h3>
+          <span class="card-tag">Delta-Delta Gorilla</span>
+        </div>
+        <span class="sync-status-badge">Local SQLite Active</span>
+      </div>
+
+      <div class="sync-stats-grid">
+        <div class="sync-stat-box">
+          <span class="sync-stat-label">Offline Retention</span>
+          <span class="sync-stat-val">30 Days</span>
+          <span class="sync-stat-sub">100% On-Board eMMC</span>
+        </div>
+
+        <div class="sync-stat-box">
+          <span class="sync-stat-label">Payload Compression</span>
+          <span class="sync-stat-val" id="compression-savings">89.8%</span>
+          <span class="sync-stat-sub">Bandwidth Reduction</span>
+        </div>
+
+        <div class="sync-stat-box">
+          <span class="sync-stat-label">24h Data Packet</span>
+          <span class="sync-stat-val" id="compression-daily-size">&lt; 38 KB</span>
+          <span class="sync-stat-sub">LoRa / BLE Ready</span>
+        </div>
+
+        <div class="sync-stat-box">
+          <span class="sync-stat-label">Cloud API Cost</span>
+          <span class="sync-stat-val text-emerald">$0.00</span>
+          <span class="sync-stat-sub">Zero Recurring Cost</span>
+        </div>
+
+        <div class="sync-stat-box">
+          <span class="sync-stat-label">Stored Records</span>
+          <span class="sync-stat-val" id="stat-record-count">—</span>
+          <span class="sync-stat-sub">SQLite Circular Buffer</span>
+        </div>
+
+        <div class="sync-stat-box">
+          <span class="sync-stat-label">System Uptime</span>
+          <span class="sync-stat-val" id="stat-uptime">—</span>
+          <span class="sync-stat-sub">Edge Daemon Running</span>
+        </div>
+      </div>
+
+      <div class="hex-preview-box">
+        <div class="hex-header">
+          <span>Delta-Compressed Binary Payload Preview (Hex):</span>
+          <button id="btn-trigger-compress" class="btn-refresh-compress">Test Compress</button>
+        </div>
+        <pre class="hex-dump" id="hex-dump-display" aria-label="Hex dump preview">AE 55 00 32 66 D5 24 10 01 02 A4 03 1C 01 B0 00 15 00 3F 0A 32 00 28 01 00 …</pre>
+      </div>
+
+      <div class="hardware-dual-summary">
+        <div class="hw-item">
+          <span class="hw-chip">MPU</span>
+          <span>Qualcomm QRB2210 Linux: AI Neural Inference, Circular Storage &amp; Web Server</span>
+        </div>
+        <div class="hw-item">
+          <span class="hw-chip mcu">MCU</span>
+          <span>STM32U585: Microsecond Real-Time I²C/UART Multi-Sensor Acquisition</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento 9: Multi-Environment Universal Domain Intelligence -->
+    <section class="card glass-card card-3d-wrap anywhere-domain-card" id="anywhere-section" aria-label="Universal Multi-Environment Domain Intelligence">
+      <div class="card-glare"></div>
+      <div class="card-header">
+        <div class="title-with-badge">
+          <h3 class="card-title">Universal Domain Intelligence</h3>
+          <span class="card-tag" id="domain-profile-tag">Campus Mode</span>
+        </div>
+        <button class="btn-open-anywhere-pill" id="btn-open-anywhere-card"><span class="icon">🌍</span> Anywhere Studio ▾</button>
+      </div>
+
+      <div class="domain-metrics-grid">
+        <!-- Metric 1: Greenhouse VPD / Transpiration -->
+        <div class="domain-metric-box">
+          <div class="domain-metric-top">
+            <span class="domain-metric-title">🌱 Greenhouse VPD</span>
+            <span class="domain-metric-badge" id="domain-vpd-status">Optimal</span>
+          </div>
+          <div class="domain-metric-val-row">
+            <span class="domain-metric-val" id="domain-vpd-val">— kPa</span>
+            <span class="domain-metric-sub">Target: 0.8–1.4 kPa</span>
+          </div>
+          <div class="domain-bar-track"><div class="domain-bar-fill" id="domain-vpd-bar" style="width:0%"></div></div>
+        </div>
+
+        <!-- Metric 2: Classroom Cognitive Drowsiness Index -->
+        <div class="domain-metric-box">
+          <div class="domain-metric-top">
+            <span class="domain-metric-title">🏫 Classroom Drowsiness (CDI)</span>
+            <span class="domain-metric-badge" id="domain-cdi-status">Optimal Focus</span>
+          </div>
+          <div class="domain-metric-val-row">
+            <span class="domain-metric-val" id="domain-cdi-val">— / 100</span>
+            <span class="domain-metric-sub" id="domain-cdi-sub">CO2 Flush: Normal</span>
+          </div>
+          <div class="domain-bar-track"><div class="domain-bar-fill" id="domain-cdi-bar" style="width:0%"></div></div>
+        </div>
+
+        <!-- Metric 3: Hospital Aerosol Infection Risk -->
+        <div class="domain-metric-box">
+          <div class="domain-metric-top">
+            <span class="domain-metric-title">🏥 Aerosol Infection Risk</span>
+            <span class="domain-metric-badge" id="domain-infection-status">Low Risk</span>
+          </div>
+          <div class="domain-metric-val-row">
+            <span class="domain-metric-val" id="domain-infection-val">— / 100</span>
+            <span class="domain-metric-sub" id="domain-infection-sub">Sterility Baseline Normal</span>
+          </div>
+          <div class="domain-bar-track"><div class="domain-bar-fill" id="domain-infection-bar" style="width:0%"></div></div>
+        </div>
+
+        <!-- Metric 4: Industrial OSHA Safety Exposure -->
+        <div class="domain-metric-box">
+          <div class="domain-metric-top">
+            <span class="domain-metric-title">🏭 Industrial OSHA/NIOSH</span>
+            <span class="domain-metric-badge" id="domain-osha-status">Safe Baseline</span>
+          </div>
+          <div class="domain-metric-val-row">
+            <span class="domain-metric-val" id="domain-osha-val">—% of TWA</span>
+            <span class="domain-metric-sub">8h Occupational Limit</span>
+          </div>
+          <div class="domain-bar-track"><div class="domain-bar-fill" id="domain-osha-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Hardware Multi-Relay Actuation Controls -->
+      <div class="relay-actuation-panel">
+        <div class="sub-heading" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>⚡ Smart Hardware Actuators (Relays):</span>
+          <span style="font-size:0.75rem;color:var(--text-secondary);">STM32U585 GPIO Bus • Automated &amp; Manual Override</span>
+        </div>
+        <div class="relay-buttons-row">
+          <div class="relay-cell" id="relay-cell-1">
+            <div class="relay-cell-info">
+              <span class="relay-chip" id="relay-badge-1">RELAY 1: OFF</span>
+              <span class="relay-label">Exhaust / Hood Fan</span>
+            </div>
+            <button class="relay-toggle-btn" id="btn-toggle-relay-1" data-relay="1">Toggle</button>
+          </div>
+          <div class="relay-cell" id="relay-cell-2">
+            <div class="relay-cell-info">
+              <span class="relay-chip" id="relay-badge-2">RELAY 2: OFF</span>
+              <span class="relay-label">HEPA Purifier / Mist</span>
+            </div>
+            <button class="relay-toggle-btn" id="btn-toggle-relay-2" data-relay="2">Toggle</button>
+          </div>
+          <div class="relay-cell" id="relay-cell-3">
+            <div class="relay-cell-info">
+              <span class="relay-chip" id="relay-badge-3">RELAY 3: OFF</span>
+              <span class="relay-label">Safety Siren / Alarm</span>
+            </div>
+            <button class="relay-toggle-btn" id="btn-toggle-relay-3" data-relay="3">Toggle</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Apple Comprehensive Multi-Tiered Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+
+      <!-- Tier 1: Engineering Footnotes & Scientific Disclaimers -->
+      <div class="footer-footnotes">
+        <p>Zero-Cloud Privacy Guarantee: All 12 environmental telemetry channels and neural inference models execute strictly on-device on the Qualcomm QRB2210 application processor and STM32U585 microcontroller. Zero raw biometric or location telemetry is transmitted to third-party cloud brokers.</p>
+        <p>Stoichiometric Gas Calibration: Real-time dynamic cross-sensitivity correction algorithms for NO₂, CO, NH₃, and VOC channels calibrated with Sensirion and Plantower laser spectroscopic benchmarks with microsecond MCU sampling.</p>
+        <p>Gorilla Time-Series Compression: Implements high-throughput delta-of-delta timestamp quantizing and XOR floating-point stream compression, achieving an average 12.8× reduction in local flash storage footprint.</p>
+      </div>
+
+      <!-- Tier 2: Brand Banner & Live Node Identity -->
+      <div class="footer-brand-row">
+        <div class="footer-brand-left">
+          <div class="logo-shield" title="AeroSense Edge AI Platform">
+            <svg class="aerosense-logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="footerLogoBg" x1="0" y1="0" x2="48" y2="48">
+                  <stop offset="0%" stop-color="#141E30" />
+                  <stop offset="100%" stop-color="#0A0F1D" />
+                </linearGradient>
+                <linearGradient id="footerAeroGrad1" x1="6" y1="8" x2="42" y2="40">
+                  <stop offset="0%" stop-color="#30D158" />
+                  <stop offset="50%" stop-color="#64D2FF" />
+                  <stop offset="100%" stop-color="#0A84FF" />
+                </linearGradient>
+              </defs>
+              <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#footerLogoBg)" stroke="rgba(255,255,255,0.18)" stroke-width="1.2"/>
+              <circle cx="24" cy="24" r="18" stroke="url(#footerAeroGrad1)" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.6" class="logo-orbit-ring"/>
+              <path d="M 12 24 C 12 16, 20 12, 26 12 C 34 12, 38 18, 36 24 C 34 30, 26 34, 20 34 C 14 34, 12 30, 14 26" stroke="url(#footerAeroGrad1)" stroke-width="2.8" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="3" fill="#30D158" class="logo-ai-core"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title-row">
+              <span class="brand-title">AeroSense <span class="badge-edge">PRO</span></span>
+              <span class="board-chip">ARDUINO UNO Q</span>
+            </div>
+            <p class="brand-subtitle">Qualcomm QRB2210 Quad-Core A53 + STM32U585 Microcontroller</p>
+          </div>
+        </div>
+
+        <div class="footer-node-pill">
+          <span class="pulse-dot"></span>
+          <span>Node #01 • Campus Quad • Dual Core Active • 100% Offline</span>
+        </div>
+      </div>
+
+      <!-- Tier 3: Apple 4-Column Directory Grid -->
+      <div class="footer-nav-grid">
+        <!-- Col 1: Hardware Core -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Hardware Core</h4>
+          <ul class="footer-links-list">
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-hardware">Qualcomm QRB2210 Linux</button></li>
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-hardware">STM32U585 Real-Time MCU</button></li>
+            <li><a href="#telemetry-section">12-Channel Sensor Array</a></li>
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-hardware">LiFePO₄ Power Subsystem</button></li>
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-bom">Bill of Materials <span class="footer-tag">$72.50 Target</span></button></li>
+          </ul>
+        </div>
+
+        <!-- Col 2: Edge AI Intelligence -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Edge AI Intelligence</h4>
+          <ul class="footer-links-list">
+            <li><a href="#source-attribution-card">On-Device Random Forest</a></li>
+            <li><a href="#forecast-section">6-Hour ARIMA Trend Model</a></li>
+            <li><a href="#source-attribution-card">Pollutant Attribution Matrix</a></li>
+            <li><a href="#advisory-section">Dynamic Health Advisories</a></li>
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-about">Zero-Cloud Explainable AI</button></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Mesh & Offline Architecture -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Mesh &amp; Offline Architecture</h4>
+          <ul class="footer-links-list">
+            <li><a href="#campus-mesh-section">ESP-NOW Peer-to-Peer Mesh</a></li>
+            <li><a href="#offline-sync-section">Gorilla Compression Engine</a></li>
+            <li><a href="#offline-sync-section">SQLite Circular Storage Ring</a></li>
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-about">Zero-Cloud Cryptographic Privacy</button></li>
+            <li><a href="#campus-mesh-section">Sub-10ms Peer Synchronization</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Platform & Resources -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Platform &amp; Resources</h4>
+          <ul class="footer-links-list">
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-about">System Architecture <span class="footer-tag">Whitepaper</span></button></li>
+            <li><a href="/api/live" target="_blank" rel="noopener">Live JSON Telemetry API</a></li>
+            <li><a href="/api/export/csv" target="_blank" rel="noopener">Download SQLite Records (CSV)</a></li>
+            <li><button type="button" class="footer-nav-link" data-open-modal="modal-hardware">Hardware Schematics &amp; Pinout</button></li>
+            <li><a href="#overview">System Status Overview</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Tier 4: Legal Bar, System Notes & Back to Top -->
+      <div class="footer-legal-row">
+        <div>
+          <span>Copyright © 2026 AeroSense Edge AI Consortium. All rights reserved. Designed following Apple Human Interface Guidelines.</span>
+        </div>
+
+        <div class="footer-legal-links">
+          <button type="button" class="footer-nav-link" data-open-modal="modal-about">Privacy Audit</button>
+          <button type="button" class="footer-nav-link" data-open-modal="modal-hardware">Hardware Specs</button>
+          <button type="button" class="footer-nav-link" data-open-modal="modal-bom">BOM Cost</button>
+          <a href="/api/live" target="_blank" rel="noopener">API Status</a>
+        </div>
+
+        <button type="button" class="btn-back-to-top" id="btn-back-to-top" aria-label="Scroll smoothly back to top of dashboard">
+          <span>Back to Top</span>
+          <span>↑</span>
+        </button>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       Apple Modals System
+       ========================================================================= -->
+
+  <!-- Modal 1: About AeroSense Pro -->
+  <div class="apple-modal-overlay" id="modal-about" role="dialog" aria-modal="true" aria-labelledby="modal-about-title">
+    <div class="apple-modal-card">
+      <div class="modal-header-bar">
+        <h3 class="modal-title" id="modal-about-title"> About AeroSense Pro</h3>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <p><strong>AeroSense Pro</strong> is an offline-first Edge AI air quality platform built on the <strong>Arduino UNO Q</strong> heterogeneous dual-core computing platform.</p>
+        <br>
+        <p>Rather than streaming raw bytes to expensive cloud platforms, AeroSense performs deterministic stoichiometric source attribution and 6-hour predictive forecasting directly on the device with zero cloud recurring cost.</p>
+        <br>
+        <h4>Key Technical Highlights:</h4>
+        <ul style="padding-left:1.25rem;margin-top:0.5rem;display:flex;flex-direction:column;gap:0.35rem;">
+          <li><strong>Zero Cloud Cost ($0.00/yr):</strong> Air-gapped autonomy for schools, RWAs, and municipal wards.</li>
+          <li><strong>Heterogeneous Dual-Compute:</strong> Microsecond I/O acquisition on STM32U585 + Linux AI inference on Qualcomm QRB2210.</li>
+          <li><strong>Stoichiometric Domain Classification:</strong> Distinguishes traffic diesel exhaust from trash fires, kitchen fumes, and dust.</li>
+          <li><strong>Gorilla Compression:</strong> 89.8% - 95.7% bandwidth reduction for battery-powered mesh nodes.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Bill of Materials & Economic Viability (<$75 Target) -->
+  <div class="apple-modal-overlay" id="modal-bom" role="dialog" aria-modal="true" aria-labelledby="modal-bom-title">
+    <div class="apple-modal-card">
+      <div class="modal-header-bar">
+        <h3 class="modal-title" id="modal-bom-title">💰 Bill of Materials &amp; Hardware Cost</h3>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <p>AeroSense Pro is engineered to meet a strict &lt; $75 total unit hardware cost target, eliminating recurring cloud API subscriptions:</p>
+        <table class="bom-table">
+          <thead>
+            <tr><th>Component</th><th>Role</th><th>Target Cost (USD)</th><th>Cost (INR)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Arduino UNO Q</strong></td><td>QRB2210 Linux + STM32U585</td><td>$38.00</td><td>₹3,150</td></tr>
+            <tr><td><strong>Plantower PMS5003</strong></td><td>Laser Scattering PM1.0, PM2.5, PM10</td><td>$14.50</td><td>₹1,200</td></tr>
+            <tr><td><strong>SGX MiCS-6814</strong></td><td>Triple MOS Gas (NO₂, CO, NH₃)</td><td>$6.80</td><td>₹560</td></tr>
+            <tr><td><strong>Bosch BME688</strong></td><td>T, RH, Barometric Pressure, VOC Index</td><td>$5.20</td><td>₹430</td></tr>
+            <tr><td><strong>LiFePO₄ Battery + Solar</strong></td><td>3.2V 2500+ Cycle MPPT Energy</td><td>$4.50</td><td>₹370</td></tr>
+            <tr><td><strong>Weatherproof Louvre Casing</strong></td><td>IP65 Outdoor UV-Shielded</td><td>$3.50</td><td>₹290</td></tr>
+            <tr style="font-weight:700;background:rgba(255,255,255,0.06);">
+              <td>TOTAL HARDWARE COST</td><td>Complete Autonomous Station</td><td>~$72.50</td><td>~₹6,000</td></tr>
+            <tr style="font-weight:700;color:var(--apple-green);">
+              <td>ANNUAL CLOUD OPEX</td><td>100% On-Device Inference</td><td>$0.00 / yr</td><td>₹0 / yr</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Hardware Schematics & Pinout -->
+  <div class="apple-modal-overlay" id="modal-hardware" role="dialog" aria-modal="true" aria-labelledby="modal-hw-title">
+    <div class="apple-modal-card">
+      <div class="modal-header-bar">
+        <h3 class="modal-title" id="modal-hw-title">📋 Arduino UNO Q Hardware Schematics</h3>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <h4>Dual-Core Bus Architecture:</h4>
+        <p>The STM32U585 MCU polls sensors deterministically via direct memory access (DMA), then sends structured binary frames to the Qualcomm QRB2210 Linux MPU across the high-speed virtual UART bridge (115200 baud).</p>
+        <table class="bom-table">
+          <thead>
+            <tr><th>Sensor Module</th><th>Physical Bus</th><th>Pinout / Address</th><th>Sampling Rate</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>PMS5003 Laser</strong></td><td>Hardware UART</td><td>D0 (RX), D1 (TX)</td><td>1 Hz Continuous</td></tr>
+            <tr><td><strong>BME688 Environmental</strong></td><td>Hardware I²C</td><td>SDA (A4), SCL (A5) • 0x77</td><td>1 Hz Low Power</td></tr>
+            <tr><td><strong>MiCS-6814 Gas Sensor</strong></td><td>12-Bit Fast ADC</td><td>A0 (NO₂), A1 (CO), A2 (NH₃)</td><td>100 Hz DMA Averaged</td></tr>
+            <tr><td><strong>Power Supervisor</strong></td><td>ADC / GPIO</td><td>A3 (Batt Voltage), D7 (Solar Cut)</td><td>0.1 Hz Watchdog</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Interactive Campus Mesh Node Inspector -->
+  <div class="apple-modal-overlay" id="modal-node-detail" role="dialog" aria-modal="true" aria-labelledby="modal-node-title">
+    <div class="apple-modal-card">
+      <div class="modal-header-bar">
+        <h3 class="modal-title" id="modal-node-title">📡 Node Diagnostics &amp; Telemetry</h3>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <div>
+            <h4 id="node-modal-name" style="font-size:1.15rem;color:var(--text-primary);">Node Name</h4>
+            <span id="node-modal-id" style="font-family:var(--font-mono);font-size:0.75rem;color:var(--apple-cyan);">UNO-Q-NODE-01</span>
+          </div>
+          <span class="mesh-count-badge" id="node-modal-status">ONLINE</span>
+        </div>
+        <table class="bom-table">
+          <tbody>
+            <tr><td><strong>Zone Location</strong></td><td id="node-modal-loc">Central Academic Quad</td></tr>
+            <tr><td><strong>GPS Coordinates</strong></td><td id="node-modal-gps">20.3540° N, 85.8180° E</td></tr>
+            <tr><td><strong>Air Quality Index</strong></td><td id="node-modal-aqi" style="font-weight:700;font-size:1.1rem;color:var(--apple-green);">42 (Good)</td></tr>
+            <tr><td><strong>Dominant Signature</strong></td><td id="node-modal-src">Clean Ambient Baseline</td></tr>
+            <tr><td><strong>LiFePO₄ Battery</strong></td><td id="node-modal-bat">96% • Solar Charging</td></tr>
+            <tr><td><strong>Radio Transceiver</strong></td><td>LoRa 868MHz P2P Mesh (-64 dBm RSSI)</td></tr>
+            <tr><td><strong>Local Recommended Action</strong></td><td id="node-modal-action">Maintain natural cross-ventilation. Recess and sports fully approved.</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+          <button id="btn-node-ping" class="btn-refresh-compress" style="padding:0.5rem 1.25rem;">📡 Ping Node</button>
+          <span id="node-ping-result" style="font-size:0.78rem;align-self:center;color:var(--text-secondary);"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       Floating Apple Control Center Tray
+       ========================================================================= -->
+  <div class="floating-control-center">
+    <div class="control-tray" id="control-tray">
+      <span class="control-tray-title"> Control Center</span>
+
+      <div class="control-row">
+        <span>Appearance</span>
+        <div class="control-btn-group" id="theme-btn-group">
+          <button class="control-toggle-btn active" data-theme="dark">🌙 Dark</button>
+          <button class="control-toggle-btn" data-theme="light">☀️ Light</button>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <span>3D Parallax Tilt</span>
+        <input type="checkbox" id="toggle-3d-tilt" checked style="accent-color:var(--apple-green);cursor:pointer;">
+      </div>
+
+      <div class="control-row">
+        <span>Refresh Rate</span>
+        <div class="control-btn-group" id="refresh-rate-group">
+          <button class="control-toggle-btn active" data-rate="1000">1s</button>
+          <button class="control-toggle-btn" data-rate="2000">2s</button>
+          <button class="control-toggle-btn" data-rate="5000">5s</button>
+          <button class="control-toggle-btn" data-rate="0">⏸</button>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <span>1-Click CSV</span>
+        <button id="btn-quick-export" class="btn-refresh-compress" style="padding:0.25rem 0.75rem;font-size:0.7rem;">Download</button>
+      </div>
+
+      <div class="control-row">
+        <span>Audio Beep Alert</span>
+        <input type="checkbox" id="toggle-audio-alerts" style="accent-color:var(--apple-green);cursor:pointer;">
+      </div>
+
+      <div class="control-row">
+        <span>Ambient Backlight</span>
+        <input type="checkbox" id="toggle-ambient-glow" checked style="accent-color:var(--apple-green);cursor:pointer;">
+      </div>
+
+      <div class="control-row">
+        <span>Fullscreen Mode</span>
+        <button id="btn-toggle-fullscreen" class="btn-refresh-compress" style="padding:0.25rem 0.75rem;font-size:0.7rem;">Expand</button>
+      </div>
+    </div>
+
+    <button class="control-fab" id="btn-control-fab" aria-label="Open Control Center">
+      <span>⚙️ Controls</span>
+    </button>
+  </div>
+
+  <!-- Modal 5: Municipal Incident Audit & Emergency Dispatch Report -->
+  <div class="apple-modal-overlay" id="modal-incident-report" role="dialog" aria-modal="true" aria-labelledby="modal-incident-title">
+    <div class="apple-modal-card print-report-card" style="max-width:820px;padding:2rem;">
+      <div class="modal-header-bar" style="border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:1rem;margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:2rem;">📄</span>
+          <div>
+            <h3 class="modal-title" id="modal-incident-title" style="font-size:1.4rem;font-weight:700;">Municipal Pollution Incident Audit Report</h3>
+            <p style="font-size:0.8rem;color:var(--text-secondary);margin:0;">Autonomous Edge AI Stoichiometric Proof &amp; Emergency Dispatch Briefing</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+
+      <div class="report-modal-body" id="report-modal-body">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;font-size:0.82rem;margin-bottom:1.5rem;border:1px solid rgba(255,255,255,0.06);">
+          <div><strong>Report ID:</strong> <span id="rpt-id" style="font-family:var(--font-mono);color:var(--apple-cyan);">AERO-AUDIT-2026-0910</span></div>
+          <div><strong>Timestamp:</strong> <span id="rpt-time">—</span></div>
+          <div><strong>Compute Architecture:</strong> Arduino UNO Q (Qualcomm QRB2210)</div>
+          <div><strong>Coordinates:</strong> 20.3540° N, 85.8180° E (Academic Quad)</div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="font-size:1rem;color:var(--text-primary);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">1. Identified Pollution Source &amp; Risk Grade</h4>
+          <div id="rpt-source-box" style="padding:1rem;border-radius:12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div id="rpt-source-name" style="font-size:1.3rem;font-weight:800;color:#EF4444;">Garbage Burning</div>
+              <div id="rpt-source-desc" style="font-size:0.82rem;color:var(--text-secondary);margin-top:0.25rem;">Smoldering plastics &amp; waste smoke plume</div>
+            </div>
+            <div id="rpt-confidence" style="font-size:1.1rem;font-weight:700;padding:0.4rem 0.8rem;border-radius:9999px;background:#EF4444;color:#FFF;">96% Confidence</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="font-size:1rem;color:var(--text-primary);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">2. Chemical Stoichiometric Proof</h4>
+          <table class="bom-table">
+            <thead>
+              <tr>
+                <th>Chemical Metric</th>
+                <th>Measured Value</th>
+                <th>Chemical Diagnostic Signature</th>
+              </tr>
+            </thead>
+            <tbody id="rpt-stoich-tbody">
+              <tr><td><strong>Fine Fraction (PM2.5/PM10)</strong></td><td id="rpt-val-pmratio">0.82</td><td>Ultrafine combustion soot dominance</td></tr>
+              <tr><td><strong>Incomplete Combustion (CO/CO2)</strong></td><td id="rpt-val-coratio">4.50</td><td>Smoldering biomass &amp; polymer pyrolysis</td></tr>
+              <tr><td><strong>NO2-to-VOC Ratio</strong></td><td id="rpt-val-no2ratio">0.25</td><td>Low urban vehicle engine contribution</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="font-size:1rem;color:var(--text-primary);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">3. Actionable Dispatch Orders for Authorities</h4>
+          <div id="rpt-dispatch-orders" style="padding:1rem;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);font-size:0.88rem;line-height:1.6;">
+            • RWA Patrol: Dispatch security team to 250m upwind perimeter immediately.<br>
+            • School Admin: Seal windward corridor windows and shift student activities indoors.<br>
+            • Municipal Body: Issue zero-cloud automated citation for illegal burning.
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);">
+          <span style="font-size:0.75rem;color:var(--text-secondary);">Generated autonomously by AeroSense Edge AI on Arduino UNO Q • 0% Cloud Dependency</span>
+          <div style="display:flex;gap:0.75rem;">
+            <button id="btn-print-audit-pdf" class="btn-refresh-compress" style="padding:0.6rem 1.4rem;background:var(--apple-blue);color:#FFF;font-weight:600;">🖨️ Print / Save PDF</button>
+            <button data-close-modal class="btn-refresh-compress" style="padding:0.6rem 1rem;">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Anywhere Deployment & Multi-Environment Studio -->
+  <div class="apple-modal-overlay" id="modal-anywhere-studio" role="dialog" aria-modal="true" aria-labelledby="modal-anywhere-title">
+    <div class="apple-modal-card anywhere-studio-card" style="max-width:960px;padding:2rem;">
+      <div class="modal-header-bar" style="border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:1rem;margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:2rem;">🌍</span>
+          <div>
+            <h3 class="modal-title" id="modal-anywhere-title" style="font-size:1.4rem;font-weight:700;">Anywhere Deployment &amp; Profiles Studio</h3>
+            <p style="font-size:0.8rem;color:var(--text-secondary);margin:0;">Universal Multi-Environment Configuration, International Standards &amp; Smart Automation for Arduino UNO Q</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+
+      <!-- Anywhere Studio Tab Bar -->
+      <div class="studio-tab-bar">
+        <button class="studio-tab-btn active" data-studio-tab="profiles"><span class="tab-icon">🏢</span> Environment Profiles</button>
+        <button class="studio-tab-btn" data-studio-tab="standards"><span class="tab-icon">🌐</span> International Standards</button>
+        <button class="studio-tab-btn" data-studio-tab="calibration"><span class="tab-icon">🎛️</span> Modular Calibration</button>
+        <button class="studio-tab-btn" data-studio-tab="rules"><span class="tab-icon">⚡</span> Smart Automation</button>
+        <button class="studio-tab-btn" data-studio-tab="iot"><span class="tab-icon">📡</span> Station &amp; IoT (MQTT)</button>
+      </div>
+
+      <!-- Tab Content 1: Profiles -->
+      <div class="studio-tab-pane active" id="pane-profiles">
+        <p class="pane-intro">Select an environment preset to instantly adapt the AI source attribution, warning thresholds, relay actuation policies, and actionable advisories to your specific location:</p>
+        <div class="profiles-grid" id="profiles-grid">
+          <!-- 8 Profile Cards -->
+          <div class="profile-card" data-profile-select="Classroom">
+            <div class="prof-icon">🏫</div>
+            <div class="prof-name">Classroom &amp; Office</div>
+            <div class="prof-desc">Focuses on cognitive drowsiness, CO₂ accumulation, and study alertness.</div>
+            <div class="prof-target">Target: CO₂ &lt; 800 ppm • Low Drowsiness</div>
+            <button class="btn-deploy-profile" data-profile="Classroom">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Hospital">
+            <div class="prof-icon">🏥</div>
+            <div class="prof-name">Hospital &amp; Cleanroom</div>
+            <div class="prof-desc">Monitors airborne infection risk, PM2.5 sterility, and sterilization VOCs.</div>
+            <div class="prof-target">Target: PM2.5 &lt; 15 µg/m³ • Ultra-Sterile</div>
+            <button class="btn-deploy-profile" data-profile="Hospital">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Industrial">
+            <div class="prof-icon">🏭</div>
+            <div class="prof-name">Industrial &amp; Workshop</div>
+            <div class="prof-desc">OSHA/NIOSH 8-hr legal exposure monitoring for welding, solvents, and NO₂/CO.</div>
+            <div class="prof-target">Target: &lt; 50% OSHA TWA Ceiling</div>
+            <button class="btn-deploy-profile" data-profile="Industrial">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Kitchen">
+            <div class="prof-icon">🍳</div>
+            <div class="prof-name">Commercial Kitchen</div>
+            <div class="prof-desc">Automatic range hood extraction booster for culinary oil smoke and burner CO.</div>
+            <div class="prof-target">Target: Auto-Actuate Relay #1 Hood</div>
+            <button class="btn-deploy-profile" data-profile="Kitchen">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Greenhouse">
+            <div class="prof-icon">🌱</div>
+            <div class="prof-name">Smart Greenhouse</div>
+            <div class="prof-desc">Vapor Pressure Deficit (VPD) microclimate control &amp; solar CO₂ enrichment.</div>
+            <div class="prof-target">Target: 0.8–1.4 kPa Optimal Transpiration</div>
+            <button class="btn-deploy-profile" data-profile="Greenhouse">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Transit">
+            <div class="prof-icon">🚇</div>
+            <div class="prof-name">Transit Hub &amp; Metro</div>
+            <div class="prof-desc">Underground subway platform brake dust (PM10) and jet fan ventilation.</div>
+            <div class="prof-target">Target: Tunnel Axial Scavenge Fans</div>
+            <button class="btn-deploy-profile" data-profile="Transit">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Residential">
+            <div class="prof-icon">🏡</div>
+            <div class="prof-name">Residential &amp; Home</div>
+            <div class="prof-desc">Whisper-quiet sleep air quality, family health, and morning window flush.</div>
+            <div class="prof-target">Target: Whisper Quiet HEPA Filtration</div>
+            <button class="btn-deploy-profile" data-profile="Residential">Deploy Profile</button>
+          </div>
+          <div class="profile-card" data-profile-select="Campus">
+            <div class="prof-icon">🌳</div>
+            <div class="prof-name">Campus &amp; Smart City</div>
+            <div class="prof-desc">Perimeter traffic exhaust, illegal garbage fires, and crop burning detection.</div>
+            <div class="prof-target">Target: Street Misting &amp; RWA Patrol</div>
+            <button class="btn-deploy-profile" data-profile="Campus">Deploy Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 2: International Standards -->
+      <div class="studio-tab-pane" id="pane-standards">
+        <p class="pane-intro">Select the regulatory compliance standard for your country or operating jurisdiction:</p>
+        <div class="standards-grid">
+          <div class="standard-card" data-standard-select="NAQI">
+            <div class="std-flag">🇮🇳</div>
+            <div class="std-name">Indian NAQI (CPCB)</div>
+            <div class="std-desc">National Air Quality Index standard based on 6 categories (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).</div>
+            <div class="std-scale">0–500 Scale • High Particulate Baseline</div>
+            <button class="btn-deploy-standard" data-standard="NAQI">Use Indian NAQI</button>
+          </div>
+          <div class="standard-card" data-standard-select="US_EPA">
+            <div class="std-flag">🇺🇸</div>
+            <div class="std-name">US EPA AQI (2024 Revised)</div>
+            <div class="std-desc">United States EPA standard with strict 9.0 µg/m³ PM2.5 annual benchmark and 6 air quality tiers.</div>
+            <div class="std-scale">0–500 Scale • Revised Clean Air Act</div>
+            <button class="btn-deploy-standard" data-standard="US_EPA">Use US EPA AQI</button>
+          </div>
+          <div class="standard-card" data-standard-select="EU_CAQI">
+            <div class="std-flag">🇪🇺</div>
+            <div class="std-name">European CAQI</div>
+            <div class="std-desc">Common Air Quality Index established by the EU for urban citizen real-time exposure comparison.</div>
+            <div class="std-scale">0–100 Scale • 5 European Classes</div>
+            <button class="btn-deploy-standard" data-standard="EU_CAQI">Use EU CAQI</button>
+          </div>
+          <div class="standard-card" data-standard-select="WHO_2021">
+            <div class="std-flag">🌐</div>
+            <div class="std-name">WHO 2021 Global Guidelines</div>
+            <div class="std-desc">World Health Organization strictest global targets (PM2.5 ≤ 15 µg/m³ 24h, PM10 ≤ 45 µg/m³).</div>
+            <div class="std-scale">Guideline Ratio • Maximum Health Protection</div>
+            <button class="btn-deploy-standard" data-standard="WHO_2021">Use WHO 2021</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 3: Calibration & Modular Sensors -->
+      <div class="studio-tab-pane" id="pane-calibration">
+        <p class="pane-intro">Fine-tune individual sensor channel calibration multipliers ($y = a \cdot x + b$) and toggle modular sensor availability:</p>
+        <div class="calibration-table-wrap">
+          <table class="calibration-table">
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>Sensor Hardware</th>
+                <th>Enabled</th>
+                <th>Gain Factor (a)</th>
+                <th>Offset Drift (b)</th>
+              </tr>
+            </thead>
+            <tbody id="calibration-tbody">
+              <!-- Populated dynamically by app.js -->
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;">
+          <button class="btn-refresh-compress" id="btn-reset-calibration">Reset Defaults</button>
+          <button class="btn-refresh-compress" id="btn-save-calibration" style="background:var(--apple-green);color:#000;font-weight:700;">💾 Save Calibration</button>
+        </div>
+      </div>
+
+      <!-- Tab Content 4: Smart Automation Rules -->
+      <div class="studio-tab-pane" id="pane-rules">
+        <p class="pane-intro">Configure automated relay actuation policies and webhook dispatch rules evaluated 100% on-device every second:</p>
+        <div class="rules-container">
+          <div class="rules-list" id="active-rules-list">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Add Rule Form -->
+          <div class="add-rule-card">
+            <h4 style="font-size:0.95rem;margin-bottom:0.75rem;">➕ Add Custom Automation Rule</h4>
+            <div class="add-rule-grid">
+              <input type="text" id="new-rule-name" class="rule-input" placeholder="Rule Name (e.g. Purifier High PM)">
+              <select id="new-rule-metric" class="rule-select">
+                <option value="pm25">PM2.5 (µg/m³)</option>
+                <option value="pm10">PM10 (µg/m³)</option>
+                <option value="co2">CO2 (ppm)</option>
+                <option value="no2">NO2 (ppm)</option>
+                <option value="co">CO (ppm)</option>
+                <option value="voc">VOC Index</option>
+                <option value="tmp">Temperature (°C)</option>
+                <option value="hum">Humidity (%)</option>
+                <option value="vpd_kpa">VPD (kPa)</option>
+                <option value="cdi_score">Cognitive Index (CDI)</option>
+                <option value="aqi">Composite AQI</option>
+                <option value="primary_source">Pollution Source</option>
+              </select>
+              <select id="new-rule-operator" class="rule-select">
+                <option value=">">&gt; (Greater than)</option>
+                <option value=">=">&gt;= (Greater or equal)</option>
+                <option value="<">&lt; (Less than)</option>
+                <option value="<=">&lt;= (Less or equal)</option>
+                <option value="==">== (Matches text)</option>
+              </select>
+              <input type="text" id="new-rule-threshold" class="rule-input" placeholder="Threshold (e.g. 50.0)">
+              <select id="new-rule-action" class="rule-select">
+                <option value="relay_1">Trigger Relay 1 (Exhaust Fan)</option>
+                <option value="relay_2">Trigger Relay 2 (Purifier/Mist)</option>
+                <option value="relay_3">Trigger Relay 3 (Siren/Alarm)</option>
+                <option value="webhook">Send Webhook Alert</option>
+              </select>
+            </div>
+            <button class="btn-refresh-compress" id="btn-add-rule" style="margin-top:0.75rem;background:var(--apple-blue);color:#FFF;font-weight:600;">Add Rule</button>
+          </div>
+
+          <!-- Webhook Configuration -->
+          <div class="webhook-config-card" style="margin-top:1.25rem;">
+            <label for="webhook-url-input" style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:0.4rem;">Alert Webhook URL (Slack, Discord, Home Assistant):</label>
+            <div style="display:flex;gap:0.75rem;">
+              <input type="url" id="webhook-url-input" class="rule-input" placeholder="https://maker.ifttt.com/trigger/... or https://discord.com/api/webhooks/..." style="flex:1;">
+              <button class="btn-refresh-compress" id="btn-save-webhook">Save Webhook</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 5: Station & IoT -->
+      <div class="studio-tab-pane" id="pane-iot">
+        <p class="pane-intro">Configure station location, deployment coordinates, and zero-dependency local MQTT telemetry publishing:</p>
+        <div class="station-iot-grid">
+          <div class="station-info-box">
+            <h4 style="font-size:0.95rem;margin-bottom:0.75rem;">📍 Station Metadata</h4>
+            <div class="field-row">
+              <label>Station Name:</label>
+              <input type="text" id="station-name-input" class="rule-input" value="Central Campus Station">
+            </div>
+            <div class="field-row">
+              <label>Zone / Room Tag:</label>
+              <input type="text" id="station-zone-input" class="rule-input" value="Academic Quad">
+            </div>
+            <div class="field-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+              <div>
+                <label>Latitude:</label>
+                <input type="number" step="0.0001" id="station-lat-input" class="rule-input" value="20.3540">
+              </div>
+              <div>
+                <label>Longitude:</label>
+                <input type="number" step="0.0001" id="station-lon-input" class="rule-input" value="85.8180">
+              </div>
+            </div>
+            <button class="btn-refresh-compress" id="btn-save-station" style="margin-top:0.75rem;">Save Station Metadata</button>
+          </div>
+
+          <div class="mqtt-info-box">
+            <h4 style="font-size:0.95rem;margin-bottom:0.75rem;">📡 Zero-Cloud MQTT Publisher</h4>
+            <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.75rem;">Auto-publishes to Home Assistant with automatic sensor discovery (topics: <code>aerosense/telemetry</code>):</p>
+            <div class="field-row">
+              <label>Broker Host IP:</label>
+              <input type="text" id="mqtt-host-input" class="rule-input" value="localhost">
+            </div>
+            <div class="field-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+              <div>
+                <label>Port:</label>
+                <input type="number" id="mqtt-port-input" class="rule-input" value="1883">
+              </div>
+              <div>
+                <label>Topic Prefix:</label>
+                <input type="text" id="mqtt-prefix-input" class="rule-input" value="aerosense">
+              </div>
+            </div>
+            <div class="field-row" style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
+              <input type="checkbox" id="mqtt-enabled-input">
+              <label for="mqtt-enabled-input">Enable MQTT Publishing</label>
+            </div>
+            <div style="display:flex;gap:0.75rem;margin-top:0.75rem;">
+              <button class="btn-refresh-compress" id="btn-save-mqtt" style="background:var(--apple-blue);color:#FFF;">Save MQTT Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="compliance-export-box" style="margin-top:1.5rem;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">📜 Environmental Compliance Audit</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);">Export 24-hour WHO &amp; EPA air quality standard compliance report</div>
+          </div>
+          <button class="btn-refresh-compress" id="btn-download-audit-json" style="background:var(--apple-cyan);color:#000;font-weight:700;">📥 Export Audit (JSON)</button>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);">
+        <button data-close-modal class="btn-refresh-compress" style="padding:0.6rem 1.4rem;">Close Studio</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <!-- ============================================================ -->
+  <!-- 6 STANDOUT FEATURE PANELS — Injected by features.js         -->
+  <!-- ============================================================ -->
+
+  <!-- Feature 5: Smart Daily Briefing -->
+  <template id="tpl-briefing">
+    <section class="card glass-card" id="daily-briefing-section" style="margin:1rem 1rem 0;padding:0;overflow:hidden;" aria-label="Daily Air Quality Briefing">
+      <div id="briefing-header-strip" style="padding:1rem 1.25rem 0.75rem;background:linear-gradient(90deg,rgba(16,185,129,0.18) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span id="briefing-time-icon" style="font-size:1.5rem;">🌅</span>
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-secondary);font-weight:500;" id="briefing-type-label">MORNING BRIEFING</div>
+            <div style="font-size:0.7rem;color:var(--text-secondary);opacity:0.6;" id="briefing-generated-at"></div>
+          </div>
+          <div style="margin-left:auto;">
+            <span id="briefing-risk-badge" style="padding:0.25rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#10B981;">✅ LOW</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:1rem 1.25rem;">
+        <div id="briefing-community-alert" style="display:none;padding:0.6rem 0.9rem;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#EF4444;font-size:0.78rem;font-weight:600;margin-bottom:0.75rem;"></div>
+        <div id="briefing-headline" style="font-size:0.95rem;font-weight:700;line-height:1.45;margin-bottom:0.6rem;"></div>
+        <div id="briefing-text" style="font-size:0.78rem;color:var(--text-secondary);line-height:1.55;margin-bottom:0.9rem;"></div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.4rem;">Key Actions</div>
+        <ul id="briefing-actions" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.35rem;"></ul>
+      </div>
+    </section>
+  </template>
+
+  <!-- Feature 1: Health Exposure -->
+  <template id="tpl-health">
+    <section class="card glass-card" id="health-exposure-section" style="margin:1rem 1rem 0;" aria-label="Personal Health Exposure">
+      <div class="card-header">
+        <h3 class="card-title">🫁 Personal Health Exposure</h3>
+        <span id="health-hp-badge" style="padding:0.25rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#EF4444;">-12 HP today</span>
+      </div>
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:1.25rem;align-items:center;margin-bottom:1rem;">
+        <!-- Lung Load Gauge (SVG) -->
+        <div style="text-align:center;">
+          <svg viewBox="0 0 100 100" width="90" height="90">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201 60" transform="rotate(135 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" id="lung-load-arc" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 261" transform="rotate(135 50 50)" style="transition:stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1),stroke 0.5s;"/>
+            <text x="50" y="50" text-anchor="middle" dy="0.35em" font-size="18" font-weight="800" fill="white" id="lung-load-pct">0%</text>
+            <text x="50" y="67" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)">Lung Load</text>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">🚬 Cigarette Equivalent</span>
+            <span id="health-cig" style="font-size:0.85rem;font-weight:800;color:#10B981;">0.0 cigs</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">✅ WHO Compliance</span>
+            <span id="health-compliance" style="font-size:0.85rem;font-weight:800;color:#10B981;">100%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">📊 Avg PM2.5 Today</span>
+            <span id="health-avg-pm25" style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);">0.0 µg/m³</span>
+          </div>
+        </div>
+      </div>
+      <!-- PM2.5 Hourly Bar Chart -->
+      <div style="margin-bottom:0.75rem;">
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.4rem;">Hourly PM2.5 Exposure</div>
+        <div id="health-hourly-bars" style="display:flex;align-items:flex-end;gap:2px;height:40px;"></div>
+      </div>
+      <div id="health-narrative" style="background:rgba(100,210,255,0.06);border:1px solid rgba(100,210,255,0.15);border-radius:8px;padding:0.65rem 0.85rem;font-size:0.77rem;color:var(--text-secondary);line-height:1.5;"></div>
+    </section>
+  </template>
+
+  <!-- Feature 2: Safe Window Planner -->
+  <template id="tpl-windows">
+    <section class="card glass-card" id="safe-window-section" style="margin:1rem 1rem 0;" aria-label="Safe Activity Windows">
+      <div class="card-header">
+        <h3 class="card-title">🕐 Safe Activity Planner</h3>
+        <span style="font-size:0.72rem;color:var(--text-secondary);">Next 24h</span>
+      </div>
+      <!-- 24h ribbon -->
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.4rem;">24-Hour AQI Forecast Ribbon</div>
+        <div id="aqi-ribbon" style="display:flex;gap:2px;height:32px;overflow-x:auto;"></div>
+      </div>
+      <!-- Activity windows list -->
+      <div id="activity-windows" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+      <!-- Worst window alert -->
+      <div id="worst-window-alert" style="margin-top:0.75rem;display:none;padding:0.6rem 0.85rem;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);font-size:0.77rem;color:#EF4444;"></div>
+    </section>
+  </template>
+
+  <!-- Feature 3: Source DNA Timeline -->
+  <template id="tpl-timeline">
+    <section class="card glass-card" id="source-timeline-section" style="margin:1rem 1rem 0;" aria-label="Pollution Source Timeline">
+      <div class="card-header">
+        <h3 class="card-title">🧬 Pollution Source DNA Timeline</h3>
+        <span style="font-size:0.72rem;color:var(--text-secondary);">Last 24h</span>
+      </div>
+      <!-- DNA strand -->
+      <div id="dna-strand" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:0.5rem;min-height:64px;"></div>
+      <!-- Source composition bar -->
+      <div style="margin-top:0.75rem;">
+        <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.4rem;">Today's Source Composition</div>
+        <div id="source-comp-bar" style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:1px;"></div>
+        <div id="source-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:0.4rem;"></div>
+      </div>
+      <!-- Peak indicators -->
+      <div style="display:flex;gap:0.75rem;margin-top:0.75rem;">
+        <div id="cleanest-badge" style="display:none;flex:1;padding:0.4rem 0.65rem;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);font-size:0.72rem;color:#10B981;"></div>
+        <div id="worst-hour-badge" style="display:none;flex:1;padding:0.4rem 0.65rem;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);font-size:0.72rem;color:#EF4444;"></div>
+      </div>
+    </section>
+  </template>
+
+  <!-- Feature 4: Compliance Streak -->
+  <template id="tpl-streak">
+    <section class="card glass-card" id="streak-section" style="margin:1rem 1rem 0;" aria-label="WHO Compliance Streak">
+      <div class="card-header">
+        <h3 class="card-title">🔥 WHO Compliance Streak</h3>
+        <span id="streak-today-badge" style="padding:0.25rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#10B981;">✅ Today Compliant</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;margin-bottom:1.25rem;text-align:center;">
+        <div style="padding:0.5rem;">
+          <div style="font-size:2.2rem;font-weight:800;color:#F97316;" id="streak-current">0</div>
+          <div style="font-size:0.7rem;color:var(--text-secondary);">🔥 days</div>
+          <div style="font-size:0.65rem;color:var(--text-secondary);">Current Streak</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);"></div>
+        <div style="padding:0.5rem;">
+          <div style="font-size:2.2rem;font-weight:800;color:#EAB308;" id="streak-best">0</div>
+          <div style="font-size:0.7rem;color:var(--text-secondary);">🏆 days</div>
+          <div style="font-size:0.65rem;color:var(--text-secondary);">Best Streak</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);"></div>
+        <div style="padding:0.5rem;">
+          <div style="font-size:2.2rem;font-weight:800;" id="streak-pm25" class="val-number">0.0</div>
+          <div style="font-size:0.7rem;color:var(--text-secondary);">µg/m³</div>
+          <div style="font-size:0.65rem;color:var(--text-secondary);">Today's Avg</div>
+        </div>
+      </div>
+      <!-- Badges -->
+      <div id="streak-badges" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;"></div>
+      <!-- Calendar heatmap -->
+      <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.4rem;">30-Day Compliance Calendar</div>
+      <div id="streak-calendar" style="display:flex;flex-wrap:wrap;gap:3px;"></div>
+    </section>
+  </template>
+
+  <!-- Feature 6: Anomaly Incident Log -->
+  <template id="tpl-incidents">
+    <section class="card glass-card" id="incidents-section" style="margin:1rem 1rem 0;" aria-label="Anomaly Incident Log">
+      <div class="card-header">
+        <h3 class="card-title">⚡ Anomaly Incident Log</h3>
+        <span id="incidents-unconfirmed-badge" style="display:none;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#EF4444;"></span>
+      </div>
+      <div id="incidents-list" style="display:flex;flex-direction:column;gap:0.65rem;">
+        <div style="text-align:center;padding:1.5rem;color:var(--text-secondary);font-size:0.82rem;">
+          ✅ No anomalies detected yet. System is monitoring continuously.
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <!-- Modal 5: AeroSense Voice — On-Device Offline Conversational Assistant -->
+  <div class="apple-modal-overlay" id="modal-voice-assistant" role="dialog" aria-modal="true" aria-labelledby="modal-voice-title">
+    <div class="apple-modal-card voice-modal-card">
+      <div class="modal-header-bar">
+        <div class="title-with-badge">
+          <h3 class="modal-title" id="modal-voice-title">🎙️ AeroSense Voice Assistant</h3>
+          <span class="card-tag">On-Device Offline SLM</span>
+        </div>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+
+      <div class="voice-modal-body">
+        <!-- Animated Voice Waveform Visualizer -->
+        <div class="voice-waveform-container" id="voice-waveform-box">
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+        </div>
+
+        <p class="voice-intro-text">
+          Ask questions in plain English. AeroSense Voice reasons 100% locally on the Qualcomm QRB2210 core, grounded in live stoichiometric chemistry, plume vectoring, and forecast horizons.
+        </p>
+
+        <!-- Quick Prompt Chips -->
+        <div class="voice-prompt-chips">
+          <button class="prompt-chip" data-prompt="Why does it smell like smoke outside?">🔥 Why does it smell like smoke?</button>
+          <button class="prompt-chip" data-prompt="Can I go for a jog right now?">🏃 Can I jog / exercise now?</button>
+          <button class="prompt-chip" data-prompt="Should I open the windows to ventilate?">🪟 Should I open windows?</button>
+          <button class="prompt-chip" data-prompt="Where is the pollution coming from?">🧭 Where is pollution coming from?</button>
+          <button class="prompt-chip" data-prompt="Are classroom conditions drowsy for students?">🏫 Is classroom air drowsy?</button>
+        </div>
+
+        <!-- Assistant Query Input Form -->
+        <form class="voice-input-row" id="voice-query-form">
+          <input type="text" id="voice-input-text" class="voice-text-input" placeholder="Ask about smoke, jogging, window ventilation, or plume origin…" aria-label="Query voice assistant" />
+          <button type="submit" class="btn-voice-send" id="btn-voice-submit">Ask AI</button>
+        </form>
+
+        <!-- Dynamic Grounded Answer Box -->
+        <div class="voice-answer-box" id="voice-answer-box">
+          <div class="voice-answer-header">
+            <span class="ai-avatar">🧠</span>
+            <span class="ai-name">AeroSense Intelligence</span>
+            <button type="button" class="btn-listen-speech" id="btn-listen-speech" title="Listen with speech audio synthesis">🔊 Listen</button>
+          </div>
+          <div class="voice-answer-text" id="voice-answer-text">
+            Click any question above or type your inquiry. AeroSense Voice will synthesize a grounded scientific assessment with immediate actionable recommendations.
+          </div>
+          <div class="voice-action-pill" id="voice-action-pill">
+            <span class="action-tag">ACTION:</span>
+            <span id="voice-action-text">Monitoring live sensor telemetry.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating AeroSense Voice Assistant Button -->
+  <button class="floating-voice-fab" id="floating-voice-fab" title="Ask AeroSense Voice Assistant (🎙️)">
+    <span class="fab-pulse"></span>
+    <span class="fab-icon">🎙️</span>
+    <span class="fab-tooltip">Ask Voice AI</span>
+  </button>
+
+  <!-- v1.5.0 Tier-1 Enhancement Cards -->
+  <!-- ====================================================
+       Card A: Pollution Credit Score
+       ==================================================== -->
+  <section class="card glass-card card-3d-wrap v15-credit-card" id="health-score-card" aria-label="Personal Pollution Credit Score">
+    <div class="card-glare"></div>
+    <div class="card-header">
+      <div class="title-with-badge">
+        <h3 class="card-title">Lung Health Score</h3>
+        <span class="card-badge" style="background:rgba(34,197,94,0.2);color:#22c55e;">PERSONAL</span>
+      </div>
+      <span class="card-tag" id="credit-score-updated">Computing…</span>
+    </div>
+    <div class="credit-score-body">
+      <!-- Animated score ring -->
+      <div class="credit-ring-wrap">
+        <svg class="credit-ring-svg" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="84" class="credit-ring-bg"/>
+          <circle cx="100" cy="100" r="84" class="credit-ring-fill" id="credit-ring-fill"
+                  stroke-dasharray="527" stroke-dashoffset="527"/>
+        </svg>
+        <div class="credit-ring-center">
+          <span class="credit-score-num" id="credit-score-num">—</span>
+          <span class="credit-score-max">/1000</span>
+          <span class="credit-score-band" id="credit-score-band">—</span>
+        </div>
+      </div>
+      <!-- 7-day sparkline -->
+      <div class="credit-right-col">
+        <div class="credit-profile-row">
+          <span class="credit-label">Profile</span>
+          <select id="credit-profile-select" class="credit-profile-select" aria-label="Household profile">
+            <option value="adult">👤 Adult</option>
+            <option value="elderly">🧓 Elderly (+30% risk)</option>
+            <option value="child">👶 Child (+50% risk)</option>
+            <option value="asthma">🫁 Asthma (+80% risk)</option>
+          </select>
+        </div>
+        <div class="credit-trend-row">
+          <span class="credit-label">7-Day Trend</span>
+          <span class="credit-trend-val" id="credit-trend-val">—</span>
+        </div>
+        <div class="credit-weekly-chart" id="credit-weekly-chart" role="img" aria-label="7-day score sparkline"></div>
+        <div class="credit-recs" id="credit-recs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       Card B: City-Wide AQI Heatmap
+       ==================================================== -->
+  <section class="card glass-card card-3d-wrap v15-heatmap-card" id="city-heatmap-card" aria-label="City AQI Heatmap">
+    <div class="card-glare"></div>
+    <div class="card-header">
+      <div class="title-with-badge">
+        <h3 class="card-title">City AQI Heatmap</h3>
+        <span class="card-badge" style="background:rgba(100,210,255,0.2);color:#64D2FF;">MESH LIVE</span>
+      </div>
+      <span class="card-tag">Leaflet.js + OpenStreetMap</span>
+    </div>
+    <div class="heatmap-legend">
+      <span class="legend-chip" style="background:#22c55e;">Good</span>
+      <span class="legend-chip" style="background:#eab308;">Moderate</span>
+      <span class="legend-chip" style="background:#f97316;">Poor</span>
+      <span class="legend-chip" style="background:#ef4444;">Very Poor</span>
+      <span class="legend-chip" style="background:#7f1d1d;">Hazardous</span>
+    </div>
+    <div id="city-heatmap-map" class="city-heatmap-map" role="application" aria-label="Interactive city air quality map"></div>
+    <div class="heatmap-footer">
+      <span id="heatmap-node-count">0 nodes online</span>
+      <span class="heatmap-footer-sep">•</span>
+      <span id="heatmap-worst-zone">Worst: —</span>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       Card C: Smart Notification Intelligence
+       ==================================================== -->
+  <section class="card glass-card card-3d-wrap v15-alerts-card" id="smart-alerts-card" aria-label="Smart Notification Intelligence">
+    <div class="card-glare"></div>
+    <div class="card-header">
+      <div class="title-with-badge">
+        <h3 class="card-title">Smart Alert Intelligence</h3>
+        <span class="card-badge" style="background:rgba(191,90,242,0.2);color:#BF5AF2;">ML FILTER</span>
+      </div>
+      <span class="card-tag" id="alert-filter-updated">Live</span>
+    </div>
+    <div class="alerts-intel-body">
+      <!-- Fatigue gauge -->
+      <div class="fatigue-gauge-wrap">
+        <div class="fatigue-label-row">
+          <span class="fatigue-title">Alert Fatigue Score</span>
+          <span class="fatigue-score-val" id="fatigue-score-val">0</span>
+        </div>
+        <div class="fatigue-bar-track">
+          <div class="fatigue-bar-fill" id="fatigue-bar-fill" style="width:0%;"></div>
+        </div>
+        <span class="fatigue-label" id="fatigue-label">🟢 Alert-Ready</span>
+      </div>
+      <!-- Stats row -->
+      <div class="alerts-stats-row">
+        <div class="alert-stat-chip">
+          <span class="alert-stat-num" id="alerts-fired">0</span>
+          <span class="alert-stat-lbl">Fired</span>
+        </div>
+        <div class="alert-stat-chip">
+          <span class="alert-stat-num" id="alerts-suppressed">0</span>
+          <span class="alert-stat-lbl">Suppressed</span>
+        </div>
+        <div class="alert-stat-chip">
+          <span class="alert-stat-num" id="alerts-suppression-rate">0%</span>
+          <span class="alert-stat-lbl">Saved</span>
+        </div>
+        <div class="alert-stat-chip">
+          <span class="alert-stat-num" id="alerts-sigma">2.5σ</span>
+          <span class="alert-stat-lbl">Threshold</span>
+        </div>
+      </div>
+      <!-- Recent alert log -->
+      <div class="alert-log" id="alert-log" aria-label="Recent alert log"></div>
+      <!-- Reset fatigue button -->
+      <button class="btn-reset-fatigue" id="btn-reset-fatigue" aria-label="Reset alert fatigue">↺ Reset Fatigue</button>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       Card D: Sleep & Circadian Mode
+       ==================================================== -->
+  <section class="card glass-card card-3d-wrap v15-sleep-card" id="sleep-mode-card" aria-label="Sleep and Circadian Mode">
+    <div class="card-glare"></div>
+    <div class="card-header">
+      <div class="title-with-badge">
+        <h3 class="card-title">Sleep &amp; Circadian Mode</h3>
+        <span class="card-badge" id="sleep-mode-badge" style="background:rgba(100,210,255,0.15);color:#64D2FF;">CHECKING…</span>
+      </div>
+      <span class="card-tag">Auto • 22:00–06:00</span>
+    </div>
+    <div class="sleep-mode-body">
+      <!-- Moon / Sun indicator -->
+      <div class="sleep-indicator" id="sleep-indicator">
+        <div class="sleep-icon-wrap" id="sleep-icon-wrap">
+          <span class="sleep-mode-icon" id="sleep-mode-icon">🌙</span>
+        </div>
+        <div class="sleep-info-col">
+          <div class="sleep-status-label" id="sleep-status-label">Sleep Mode Active</div>
+          <div class="sleep-pm25-threshold">PM2.5 Threshold: <strong id="sleep-pm25-threshold">12 µg/m³</strong></div>
+          <div class="sleep-relay-label" id="sleep-relay-label">🔇 Relays in quiet mode</div>
+        </div>
+      </div>
+      <!-- Sleep window config -->
+      <div class="sleep-window-row">
+        <span class="sleep-window-label">Window</span>
+        <select id="sleep-start-select" class="sleep-time-select" aria-label="Sleep start hour">
+          <!-- Populated by JS -->
+        </select>
+        <span class="sleep-window-arrow">→</span>
+        <select id="sleep-end-select" class="sleep-time-select" aria-label="Sleep end hour">
+          <!-- Populated by JS -->
+        </select>
+        <button class="btn-apply-sleep-window" id="btn-apply-sleep-window">Apply</button>
+      </div>
+      <!-- Wake report (shown after sleep session) -->
+      <div class="wake-report-panel" id="wake-report-panel" style="display:none;">
+        <div class="wake-report-title">☀️ Good Morning! Sleep Air Quality Report</div>
+        <div class="wake-stats-row">
+          <div class="wake-stat">
+            <span class="wake-stat-num" id="sleep-quality-score">—</span>
+            <span class="wake-stat-lbl">Sleep Score</span>
+          </div>
+          <div class="wake-stat">
+            <span class="wake-stat-num" id="sleep-avg-aqi">—</span>
+            <span class="wake-stat-lbl">Avg AQI</span>
+          </div>
+          <div class="wake-stat">
+            <span class="wake-stat-num" id="sleep-duration">—h</span>
+            <span class="wake-stat-lbl">Duration</span>
+          </div>
+        </div>
+        <div class="wake-narrative" id="wake-narrative"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- feature-panels-container (existing) -->
+  <div id="feature-panels-container" style="padding-bottom:2rem;"></div>
+  <script src="features.js"></script>
+</body>
+</html>

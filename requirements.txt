@@ -1,0 +1,15 @@
+# ============================================================
+# AeroSense Edge — Python Dependencies
+# ============================================================
+
+# Real hardware serial port (STM32U585 MCU communication)
+# Only required when NOT in simulation_mode=True
+pytest==7.4.3
+requests==2.31.0
+pyserial==3.5
+# Local LLM dependencies
+torch>=2.0.0
+transformers>=4.35.0
+
+# All other dependencies (sqlite3, struct, zlib, json, threading,
+# collections, math, time, logging, signal) are Python stdlib.

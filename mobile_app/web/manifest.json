@@ -1,0 +1,35 @@
+{
+    "name": "AeroSense Edge - AI Air Intelligence",
+    "short_name": "AeroSense",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0B111E",
+    "theme_color": "#00F5D4",
+    "description": "Offline Edge AI Air Intelligence & Pollution Fingerprinting",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

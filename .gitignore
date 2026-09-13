@@ -1,0 +1,58 @@
+# ============================================================
+# AeroSense Edge — .gitignore
+# ============================================================
+
+# ---- SQLite database (contains live sensor data) ----------
+*.db
+*.db-shm
+*.db-wal
+
+# ---- Python bytecode & caches ----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ---- Log files -------------------------------------------
+*.log
+logs/
+
+# ---- Virtual environments --------------------------------
+.venv/
+venv/
+env/
+.env
+
+# ---- OS-specific -----------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- IDE / Editor ----------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- Flutter/Dart ----------------------------------------
+mobile_app/.dart_tool/
+mobile_app/build/
+mobile_app/.flutter-plugins
+mobile_app/.flutter-plugins-dependencies
+mobile_app/*.iml
+mobile_app/.pub-cache/
+mobile_app/.pub/
+
+# ---- Trained model weights (large binaries) ---------------
+# Remove this line if you want to commit weights to the repo
+# edge_ai/models/*.json
+
+# ---- Node / npm (if any tooling added later) -------------
+node_modules/
+npm-debug.log*

@@ -1,0 +1,7 @@
+[tool.pyright]
+extraPaths = ["edge_ai", "edge_core"]
+include = ["edge_ai", "edge_core", "tests"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "edge_ai", "edge_core"]
+testpaths = ["tests"]
