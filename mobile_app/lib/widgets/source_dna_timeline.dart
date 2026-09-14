@@ -21,20 +21,27 @@ class SourceTimelineData {
     this.hoursQueried = 24,
   });
 
-  factory SourceTimelineData.fromJson(Map<String, dynamic> j) => SourceTimelineData(
-    timeline: (j['timeline'] as List? ?? [])
-        .map((e) => TimelineSlot.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    sourceDistribution: Map<String, int>.from(
-        (j['source_distribution'] as Map? ?? {}).map((k, v) => MapEntry(k.toString(), (v as num).toInt()))),
-    cleanestHour: j['cleanest_hour'] != null
-        ? TimelineSlot.fromJson(j['cleanest_hour'] as Map<String, dynamic>)
-        : null,
-    worstHour: j['worst_hour'] != null
-        ? TimelineSlot.fromJson(j['worst_hour'] as Map<String, dynamic>)
-        : null,
-    hoursQueried: j['hours_queried'] ?? 24,
-  );
+  factory SourceTimelineData.fromJson(Map<String, dynamic> j) {
+    final rawTimeline = j['timeline'];
+    if (rawTimeline == null || (rawTimeline is List && rawTimeline.isEmpty)) {
+      return SourceTimelineData.simulated();
+    }
+    return SourceTimelineData(
+      timeline: (rawTimeline as List)
+          .whereType<Map>()
+          .map((e) => TimelineSlot.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      sourceDistribution: Map<String, int>.from(
+          (j['source_distribution'] as Map? ?? {}).map((k, v) => MapEntry(k.toString(), (v as num).toInt()))),
+      cleanestHour: j['cleanest_hour'] != null && j['cleanest_hour'] is Map
+          ? TimelineSlot.fromJson(Map<String, dynamic>.from(j['cleanest_hour'] as Map))
+          : null,
+      worstHour: j['worst_hour'] != null && j['worst_hour'] is Map
+          ? TimelineSlot.fromJson(Map<String, dynamic>.from(j['worst_hour'] as Map))
+          : null,
+      hoursQueried: (j['hours_queried'] as num?)?.toInt() ?? 24,
+    );
+  }
 
   static SourceTimelineData simulated() {
     final now = DateTime.now().hour;

@@ -9,11 +9,15 @@ import '../widgets/glass_card.dart';
 class SettingsScreen extends StatefulWidget {
   final String currentNodeIp;
   final ValueChanged<String> onNodeIpChanged;
+  final ThemeMode currentThemeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
 
   const SettingsScreen({
     super.key,
     required this.currentNodeIp,
     required this.onNodeIpChanged,
+    this.currentThemeMode = ThemeMode.system,
+    this.onThemeModeChanged,
   });
 
   @override
@@ -22,6 +26,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _ipController;
+  late ThemeMode _themeMode;
   int _pollingInterval = 1;
   String _aqiStandard = 'NAQI India (CPCB 2014)';
   bool _notifyUrgent = true;
@@ -40,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _ipController = TextEditingController(text: widget.currentNodeIp);
+    _themeMode = widget.currentThemeMode;
   }
 
   @override
@@ -54,11 +60,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: Theme.of(context).extension<AeroTheme>()!.bgDark,
       appBar: _buildAppBar(context),
       body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          _buildSectionHeader('APPEARANCE & THEME', Icons.palette_outlined,
+              Theme.of(context).extension<AeroTheme>()!.accentCyan),
+          const SizedBox(height: 8),
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            borderColor: Theme.of(context).extension<AeroTheme>()!.accentCyan.withValues(alpha: 0.25),
+            child: Column(
+              children: [
+                _buildThemeOption(
+                  title: 'System Default (Recommended)',
+                  subtitle: 'Automatically adapts to phone dark or light mode',
+                  icon: Icons.brightness_auto_rounded,
+                  mode: ThemeMode.system,
+                ),
+                const SizedBox(height: 8),
+                _buildThemeOption(
+                  title: 'Dark Mode',
+                  subtitle: 'Obsidian & Cyber Mint executive dark theme',
+                  icon: Icons.dark_mode_rounded,
+                  mode: ThemeMode.dark,
+                ),
+                const SizedBox(height: 8),
+                _buildThemeOption(
+                  title: 'Light Mode',
+                  subtitle: 'Airy glass & slate daytime appearance',
+                  icon: Icons.light_mode_rounded,
+                  mode: ThemeMode.light,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
           _buildSectionHeader('NODE CONNECTION', Icons.router_rounded,
               Theme.of(context).extension<AeroTheme>()!.accentCyan),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           GlassCard(
             padding: EdgeInsets.all(18),
             glow: false,
@@ -450,6 +489,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
           border: Border.all(color: color.withValues(alpha: 0.40)),
         ),
         child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildThemeOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required ThemeMode mode,
+  }) {
+    final theme = Theme.of(context).extension<AeroTheme>()!;
+    final active = _themeMode == mode;
+
+    return InkWell(
+      onTap: () {
+        setState(() => _themeMode = mode);
+        widget.onThemeModeChanged?.call(mode);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: active
+              ? theme.primaryEmerald.withValues(alpha: 0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: active
+                ? theme.primaryEmerald.withValues(alpha: 0.55)
+                : theme.glassBorder,
+            width: 1.1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: active
+                    ? theme.primaryEmerald.withValues(alpha: 0.20)
+                    : theme.glassSurface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: active
+                      ? theme.primaryEmerald.withValues(alpha: 0.45)
+                      : theme.glassBorder,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 16,
+                color: active ? theme.primaryEmerald : theme.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                      color: active ? theme.textPrimary : theme.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: theme.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              active
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              size: 18,
+              color: active ? theme.primaryEmerald : theme.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }

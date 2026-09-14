@@ -83,7 +83,8 @@ Color _riskColor(String riskLevel) {
 
 class DailyBriefingCard extends StatefulWidget {
   final DailyBriefingData data;
-  const DailyBriefingCard({super.key, required this.data});
+  final VoidCallback? onOpenFullAdvisory;
+  const DailyBriefingCard({super.key, required this.data, this.onOpenFullAdvisory});
   @override
   State<DailyBriefingCard> createState() => _DailyBriefingCardState();
 }
@@ -258,6 +259,39 @@ class _DailyBriefingCardState extends State<DailyBriefingCard>
                         ],
                       ),
                     )),
+                    if (widget.onOpenFullAdvisory != null) ...[
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: InkWell(
+                          onTap: widget.onOpenFullAdvisory,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: color.withValues(alpha: 0.35)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Full Advisory',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: color,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(Icons.arrow_forward_ios_rounded, size: 10, color: color),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

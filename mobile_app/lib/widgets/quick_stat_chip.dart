@@ -25,33 +25,48 @@ class QuickStatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context).extension<AeroTheme>()!;
     final color = alertColor ?? iconColor;
+    final isAlert = alertColor != null;
+
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                color.withValues(alpha: 0.10),
-                Colors.white.withValues(alpha: 0.04),
+                color.withValues(alpha: isAlert ? 0.16 : 0.08),
+                theme.bgSurface.withValues(alpha: 0.70),
+                theme.bgDark.withValues(alpha: 0.85),
               ],
+              stops: const [0.0, 0.5, 1.0],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: color.withValues(alpha: 0.35),
+              color: isAlert
+                  ? color.withValues(alpha: 0.60)
+                  : Colors.white.withValues(alpha: 0.12),
               width: 1.1,
             ),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.12),
+                color: isAlert
+                    ? color.withValues(alpha: 0.25)
+                    : Colors.black.withValues(alpha: 0.35),
                 blurRadius: 14,
-                offset: const Offset(0, 4),
+                offset: const Offset(0, 5),
               ),
+              if (isAlert)
+                BoxShadow(
+                  color: color.withValues(alpha: 0.15),
+                  blurRadius: 24,
+                  spreadRadius: 1,
+                ),
             ],
           ),
           child: Column(
@@ -59,45 +74,58 @@ class QuickStatChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, size: 13, color: color),
-                  SizedBox(width: 5),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: color.withValues(alpha: 0.85),
-                      letterSpacing: 0.4,
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.35),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Icon(icon, size: 12, color: color),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: isAlert ? color : theme.textSecondary,
+                        letterSpacing: 0.6,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
                     value,
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).extension<AeroTheme>()!.textPrimary,
+                      fontWeight: FontWeight.w900,
+                      color: isAlert ? color : theme.textPrimary,
+                      letterSpacing: -0.5,
                       height: 1.0,
                     ),
                   ),
-                  SizedBox(width: 2),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 2),
-                    child: Text(
-                      unit,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).extension<AeroTheme>()!.textSecondary,
-                      ),
+                  const SizedBox(width: 3),
+                  Text(
+                    unit,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: theme.textMuted,
                     ),
                   ),
                 ],

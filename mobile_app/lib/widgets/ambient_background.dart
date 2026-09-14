@@ -74,24 +74,27 @@ class _AuroraPainter extends CustomPainter {
   final double t; // 0..1 animation progress
   _AuroraPainter(this.t, this.theme);
 
-  void _drawBlob(
+  void _drawAtmosphericGlow(
     Canvas canvas,
     Size size,
     Offset center,
     double radius,
     Color color,
-    double alpha,
+    double peakAlpha,
   ) {
+    final isLight = theme.bgDark.computeLuminance() > 0.5;
+    final effectiveAlpha = isLight ? peakAlpha * 0.70 : peakAlpha;
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          color.withValues(alpha: alpha),
-          color.withValues(alpha: alpha * 0.35),
+          color.withValues(alpha: effectiveAlpha),
+          color.withValues(alpha: effectiveAlpha * 0.55),
+          color.withValues(alpha: effectiveAlpha * 0.18),
           color.withValues(alpha: 0.0),
         ],
-        stops: const [0.0, 0.5, 1.0],
+        stops: const [0.0, 0.35, 0.70, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..blendMode = BlendMode.screen;
+      ..blendMode = isLight ? BlendMode.srcOver : BlendMode.screen;
     canvas.drawCircle(center, radius, paint);
   }
 
@@ -100,29 +103,67 @@ class _AuroraPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Blob 1 – top left emerald
-    final b1x = w * (0.1 + 0.15 * sin(t * pi));
-    final b1y = h * (0.08 + 0.08 * cos(t * pi));
-    _drawBlob(canvas, size, Offset(b1x, b1y), w * 0.55,
-        theme.primaryEmerald, 0.11);
+    // Base deep aerospace tint
+    final baseGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        theme.bgDeepNavy,
+        theme.bgDark,
+      ],
+    );
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..shader = baseGradient.createShader(Offset.zero & size),
+    );
 
-    // Blob 2 – top right cyan
-    final b2x = w * (0.85 - 0.12 * sin(t * pi * 1.3));
-    final b2y = h * (0.05 + 0.1 * cos(t * pi * 0.7));
-    _drawBlob(canvas, size, Offset(b2x, b2y), w * 0.50,
-        theme.accentCyan, 0.09);
+    // Primary Focal Aura — centered behind Hero AQI Gauge (top center)
+    final heroX = w * (0.50 + 0.06 * sin(t * 2 * pi));
+    final heroY = h * (0.16 + 0.04 * cos(t * 2 * pi));
+    _drawAtmosphericGlow(
+      canvas,
+      size,
+      Offset(heroX, heroY),
+      w * 0.85,
+      theme.primaryEmerald,
+      0.14,
+    );
 
-    // Blob 3 – mid indigo
-    final b3x = w * (0.5 + 0.1 * cos(t * pi * 1.7));
-    final b3y = h * (0.35 + 0.06 * sin(t * pi * 1.1));
-    _drawBlob(canvas, size, Offset(b3x, b3y), w * 0.45,
-        theme.accentIndigo, 0.07);
+    // Secondary Accent Aura — Top-Right Azure Cyber Glow
+    final cyanX = w * (0.88 - 0.10 * cos(t * 2 * pi * 0.8));
+    final cyanY = h * (0.10 + 0.05 * sin(t * 2 * pi * 0.8));
+    _drawAtmosphericGlow(
+      canvas,
+      size,
+      Offset(cyanX, cyanY),
+      w * 0.75,
+      theme.accentCyan,
+      0.12,
+    );
 
-    // Blob 4 – bottom violet accent
-    final b4x = w * (0.2 + 0.1 * cos(t * pi * 0.9));
-    final b4y = h * (0.72 + 0.05 * sin(t * pi * 1.4));
-    _drawBlob(canvas, size, Offset(b4x, b4y), w * 0.40,
-        theme.accentViolet, 0.06);
+    // Deep Aerospace Indigo Drift — Mid-lower background
+    final indX = w * (0.25 + 0.12 * sin(t * 2 * pi * 1.1));
+    final indY = h * (0.48 + 0.06 * cos(t * 2 * pi * 0.9));
+    _drawAtmosphericGlow(
+      canvas,
+      size,
+      Offset(indX, indY),
+      w * 0.90,
+      theme.accentIndigo,
+      0.09,
+    );
+
+    // Ambient Violet Base Flare — Bottom-Right depth
+    final vioX = w * (0.75 + 0.08 * cos(t * 2 * pi * 0.6));
+    final vioY = h * (0.80 + 0.04 * sin(t * 2 * pi * 0.7));
+    _drawAtmosphericGlow(
+      canvas,
+      size,
+      Offset(vioX, vioY),
+      w * 0.80,
+      theme.accentViolet,
+      0.07,
+    );
   }
 
   @override

@@ -10,7 +10,6 @@ import '../widgets/source_attribution_card.dart';
 import '../widgets/forecast_card.dart';
 import '../widgets/ambient_background.dart';
 import '../widgets/quick_stat_chip.dart';
-import '../widgets/scenario_selector_sheet.dart';
 import '../widgets/aqi_history_chart.dart';
 import '../widgets/judge_test_drive_bar.dart';
 import '../widgets/ai_benchmark_card.dart';
@@ -26,16 +25,20 @@ import '../services/edge_api_service.dart';
 import '../services/voice_assistant_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+enum OverviewHubTab { forecast, health, edgeAi }
+
 class DashboardScreen extends StatefulWidget {
   final AeroSenseState state;
   final Function(String) onScenarioChange;
   final Future<void> Function() onRefresh;
+  final Function(int)? onNavigateTab;
 
   const DashboardScreen({
     super.key,
     required this.state,
     required this.onScenarioChange,
     required this.onRefresh,
+    this.onNavigateTab,
   });
 
   @override
@@ -47,6 +50,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   late AnimationController _headerCtrl;
   late Animation<double> _headerFade;
   late Animation<Offset> _headerSlide;
+
+  OverviewHubTab _activeHub = OverviewHubTab.forecast;
+  bool _showAllCards = false;
 
   // Feature data futures (loaded once on init, independent of 1s poll)
   Future<Map<String, dynamic>>? _briefingFuture;
@@ -162,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -174,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           child: _buildStatusBar(state, aqiColor),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
 
                       // ── Judge Test Drive Quick Bar ───────────────────────
                       JudgeTestDriveBar(
@@ -182,7 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         onScenarioChange: widget.onScenarioChange,
                         onOpenIncidentReport: () => IncidentReportDialog.show(context, state),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
                       // ── Urgent alert banner ───────────────────────────────
                       if (state.advisory.urgentAlerts.isNotEmpty)
@@ -194,98 +200,42 @@ class _DashboardScreenState extends State<DashboardScreen>
                         aqiCategory: state.features.aqiCategory,
                         primaryPollutant: state.features.primaryPollutant,
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
 
                       // ── Quick stats row ───────────────────────────────────
                       _buildQuickStatsRow(tel, aqi),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
 
-                      // ── AI Source Attribution ─────────────────────────────
+                      // ── AI Source Attribution (With one-tap XAI expander) ──
                       _buildAttributionWrapper(state),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
 
-                      // ── Edge AI Diagnostics Benchmark Card ───────────────
-                      AiBenchmarkCard(benchmark: state.sourceAttribution.aiBenchmark),
-                      SizedBox(height: 14),
-
-                      // ── Historical AQI Trend Chart ────────────────────────
-                      AqiHistoryChart(forecast: state.forecast),
-                      SizedBox(height: 14),
-
-                      // ── Forecast card ─────────────────────────────────────
-                      _buildForecastWrapper(state),
-                      SizedBox(height: 14),
-
-                      // ── Today's Action Card ───────────────────────────────
-                      _buildActionCard(state, aqiColor),
-                      SizedBox(height: 20),
-
-                      // ══ Feature 5: Smart Daily Briefing ══════════════════
+                      // ── Unified Smart Daily Briefing & Action Card ───────
                       FutureBuilder<Map<String, dynamic>>(
                         future: _briefingFuture,
                         builder: (_, snap) {
                           final data = snap.hasData
                               ? DailyBriefingData.fromJson(snap.data!)
                               : DailyBriefingData.simulated();
-                          return DailyBriefingCard(data: data);
+                          return DailyBriefingCard(
+                            data: data,
+                            onOpenFullAdvisory: widget.onNavigateTab != null
+                                ? () => widget.onNavigateTab!(1)
+                                : null,
+                          );
                         },
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 20),
 
-                      // ══ v1.5 Feature: Pollution Credit Score (0-1000) ══════
-                      PollutionCreditCard(
-                        state: widget.state,
-                        initialFuture: _creditScoreFuture,
-                      ),
-                      SizedBox(height: 14),
+                      // ── Segmented Intelligence Selector ───────────────────
+                      _buildHubSelector(Theme.of(context).extension<AeroTheme>()!),
+                      const SizedBox(height: 14),
 
-                      // ══ Feature 1: Exposure Timeline ═════════════════════
-                      FutureBuilder<Map<String, dynamic>>(
-                        future: _healthFuture,
-                        builder: (_, snap) {
-                          final data = snap.hasData
-                              ? HealthExposureData.fromJson(snap.data!)
-                              : HealthExposureData.simulated();
-                          return HealthExposureCard(data: data);
-                        },
-                      ),
-                      SizedBox(height: 14),
-
-                      // ══ Feature 2: Safe Window Planner ═══════════════════
-                      FutureBuilder<Map<String, dynamic>>(
-                        future: _windowsFuture,
-                        builder: (_, snap) {
-                          final data = snap.hasData
-                              ? SafeWindowData.fromJson(snap.data!)
-                              : SafeWindowData.simulated();
-                          return SafeWindowPlanner(data: data);
-                        },
-                      ),
-                      SizedBox(height: 14),
-
-                      // ══ Feature 3: Source DNA Timeline ═══════════════════
-                      FutureBuilder<Map<String, dynamic>>(
-                        future: _timelineFuture,
-                        builder: (_, snap) {
-                          final data = snap.hasData
-                              ? SourceTimelineData.fromJson(snap.data!)
-                              : SourceTimelineData.simulated();
-                          return SourceDnaTimeline(data: data);
-                        },
-                      ),
-                      SizedBox(height: 14),
-
-                      // ══ Feature 4: Compliance Streak ═════════════════════
-                      FutureBuilder<Map<String, dynamic>>(
-                        future: _streakFuture,
-                        builder: (_, snap) {
-                          final data = snap.hasData
-                              ? ComplianceStreakData.fromJson(snap.data!)
-                              : ComplianceStreakData.simulated();
-                          return ComplianceStreakCard(data: data);
-                        },
-                      ),
-                      SizedBox(height: 24),
+                      // ── Active Hub Content (or All) ───────────────────────
+                      if (_showAllCards)
+                        _buildAllHubsContent(state, aqiColor)
+                      else
+                        _buildSingleHubContent(state, aqiColor),
                     ],
                   ),
                 ),
@@ -303,6 +253,336 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  //  SEGMENTED INTELLIGENCE HUB
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildHubSelector(AeroTheme theme) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.bgSurface.withValues(alpha: 0.70),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTabButton(
+              title: 'Forecast',
+              icon: Icons.show_chart_rounded,
+              tab: OverviewHubTab.forecast,
+              theme: theme,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: _buildTabButton(
+              title: 'Health',
+              icon: Icons.health_and_safety_outlined,
+              tab: OverviewHubTab.health,
+              theme: theme,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: _buildTabButton(
+              title: 'Edge AI',
+              icon: Icons.memory_rounded,
+              tab: OverviewHubTab.edgeAi,
+              theme: theme,
+            ),
+          ),
+          const SizedBox(width: 4),
+          InkWell(
+            onTap: () => setState(() => _showAllCards = !_showAllCards),
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: _showAllCards
+                    ? theme.accentCyan.withValues(alpha: 0.20)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: _showAllCards
+                    ? Border.all(color: theme.accentCyan.withValues(alpha: 0.55))
+                    : null,
+                boxShadow: _showAllCards
+                    ? [
+                        BoxShadow(
+                          color: theme.accentCyan.withValues(alpha: 0.20),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _showAllCards ? Icons.unfold_less_rounded : Icons.unfold_more_rounded,
+                    size: 14,
+                    color: _showAllCards ? theme.accentCyan : theme.textMuted,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    'All',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: _showAllCards ? theme.accentCyan : theme.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton({
+    required String title,
+    required IconData icon,
+    required OverviewHubTab tab,
+    required AeroTheme theme,
+  }) {
+    final isSelected = !_showAllCards && _activeHub == tab;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _showAllCards = false;
+          _activeHub = tab;
+        });
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    theme.accentCyan.withValues(alpha: 0.25),
+                    theme.accentCyan.withValues(alpha: 0.12),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected
+              ? Border.all(
+                  color: theme.accentCyan.withValues(alpha: 0.60),
+                  width: 1.1,
+                )
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.accentCyan.withValues(alpha: 0.22),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? theme.accentCyan : theme.textMuted,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? Colors.white : theme.textSecondary,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleHubContent(AeroSenseState state, Color aqiColor) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      child: KeyedSubtree(
+        key: ValueKey(_activeHub),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_activeHub == OverviewHubTab.forecast) ...[
+              AqiHistoryChart(forecast: state.forecast),
+              const SizedBox(height: 14),
+              _buildForecastWrapper(state),
+              const SizedBox(height: 14),
+              FutureBuilder<Map<String, dynamic>>(
+                future: _windowsFuture,
+                builder: (_, snap) {
+                  final data = snap.hasData
+                      ? SafeWindowData.fromJson(snap.data!)
+                      : SafeWindowData.simulated();
+                  return SafeWindowPlanner(data: data);
+                },
+              ),
+            ] else if (_activeHub == OverviewHubTab.health) ...[
+              PollutionCreditCard(
+                state: widget.state,
+                initialFuture: _creditScoreFuture,
+              ),
+              const SizedBox(height: 14),
+              FutureBuilder<Map<String, dynamic>>(
+                future: _healthFuture,
+                builder: (_, snap) {
+                  final data = snap.hasData
+                      ? HealthExposureData.fromJson(snap.data!)
+                      : HealthExposureData.simulated();
+                  return HealthExposureCard(data: data);
+                },
+              ),
+              const SizedBox(height: 14),
+              FutureBuilder<Map<String, dynamic>>(
+                future: _streakFuture,
+                builder: (_, snap) {
+                  final data = snap.hasData
+                      ? ComplianceStreakData.fromJson(snap.data!)
+                      : ComplianceStreakData.simulated();
+                  return ComplianceStreakCard(data: data);
+                },
+              ),
+            ] else if (_activeHub == OverviewHubTab.edgeAi) ...[
+              AiBenchmarkCard(benchmark: state.sourceAttribution.aiBenchmark),
+              const SizedBox(height: 14),
+              FutureBuilder<Map<String, dynamic>>(
+                future: _timelineFuture,
+                builder: (_, snap) {
+                  final data = snap.hasData
+                      ? SourceTimelineData.fromJson(snap.data!)
+                      : SourceTimelineData.simulated();
+                  return SourceDnaTimeline(data: data);
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAllHubsContent(AeroSenseState state, Color aqiColor) {
+    final theme = Theme.of(context).extension<AeroTheme>()!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionDivider(theme, 'PREDICTIVE FORECAST & PLANNER', Icons.show_chart_rounded),
+        const SizedBox(height: 10),
+        AqiHistoryChart(forecast: state.forecast),
+        const SizedBox(height: 14),
+        _buildForecastWrapper(state),
+        const SizedBox(height: 14),
+        FutureBuilder<Map<String, dynamic>>(
+          future: _windowsFuture,
+          builder: (_, snap) {
+            final data = snap.hasData
+                ? SafeWindowData.fromJson(snap.data!)
+                : SafeWindowData.simulated();
+            return SafeWindowPlanner(data: data);
+          },
+        ),
+        const SizedBox(height: 24),
+
+        _buildSectionDivider(theme, 'PERSONAL HEALTH & RESILIENCE', Icons.health_and_safety_outlined),
+        const SizedBox(height: 10),
+        PollutionCreditCard(
+          state: widget.state,
+          initialFuture: _creditScoreFuture,
+        ),
+        const SizedBox(height: 14),
+        FutureBuilder<Map<String, dynamic>>(
+          future: _healthFuture,
+          builder: (_, snap) {
+            final data = snap.hasData
+                ? HealthExposureData.fromJson(snap.data!)
+                : HealthExposureData.simulated();
+            return HealthExposureCard(data: data);
+          },
+        ),
+        const SizedBox(height: 14),
+        FutureBuilder<Map<String, dynamic>>(
+          future: _streakFuture,
+          builder: (_, snap) {
+            final data = snap.hasData
+                ? ComplianceStreakData.fromJson(snap.data!)
+                : ComplianceStreakData.simulated();
+            return ComplianceStreakCard(data: data);
+          },
+        ),
+        const SizedBox(height: 24),
+
+        _buildSectionDivider(theme, 'HARDWARE & EDGE AI ENGINE', Icons.memory_rounded),
+        const SizedBox(height: 10),
+        AiBenchmarkCard(benchmark: state.sourceAttribution.aiBenchmark),
+        const SizedBox(height: 14),
+        FutureBuilder<Map<String, dynamic>>(
+          future: _timelineFuture,
+          builder: (_, snap) {
+            final data = snap.hasData
+                ? SourceTimelineData.fromJson(snap.data!)
+                : SourceTimelineData.simulated();
+            return SourceDnaTimeline(data: data);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionDivider(AeroTheme theme, String label, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: theme.accentCyan),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: theme.accentCyan,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: theme.glassBorder,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   //  STATUS BAR
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -315,55 +595,61 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).extension<AeroTheme>()!.glassSurfaceHigh,
-                Theme.of(context).extension<AeroTheme>()!.glassSurfaceMid,
-              ],
-            ),
+            color: Theme.of(context).extension<AeroTheme>()!.bgSurface.withValues(alpha: 0.70),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Theme.of(context).extension<AeroTheme>()!.glassBorderBright, width: 1.2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.12),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             children: [
               // Live/offline indicator
               Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                 decoration: BoxDecoration(
-                  color: liveColor.withValues(alpha: 0.12),
+                  color: liveColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
-                  border:
-                      Border.all(color: liveColor.withValues(alpha: 0.40)),
+                  border: Border.all(
+                    color: liveColor.withValues(alpha: 0.45),
+                    width: 0.9,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _PulseDot(color: liveColor),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
                       isLive ? 'Arduino UNO Q' : 'Offline Core',
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
                         color: liveColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   isLive
-                      ? '${state.activeProfile} Mode • ${state.activeStandard}'
+                      ? '${state.activeProfile} • ${state.activeStandard}'
                       : '${state.activeScenario} • ${state.activeProfile}',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Theme.of(context).extension<AeroTheme>()!.textMuted,
-                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).extension<AeroTheme>()!.textSecondary,
+                    fontWeight: FontWeight.w600,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -375,19 +661,21 @@ class _DashboardScreenState extends State<DashboardScreen>
                     'AeroSense Health Advisory. Current status: ${state.features.aqiCategory}, AQI ${state.features.aqi}. Primary pollutant: ${state.features.primaryPollutant}. Dominant source: ${state.sourceAttribution.primarySource}. ${state.advisory.headline}',
                   );
                 },
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Theme.of(context).extension<AeroTheme>()!.accentCyan.withValues(alpha: 0.3)),
+                    color: Theme.of(context).extension<AeroTheme>()!.accentCyan.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Theme.of(context).extension<AeroTheme>()!.accentCyan.withValues(alpha: 0.40),
+                      width: 0.9,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.volume_up_rounded, size: 14, color: Theme.of(context).extension<AeroTheme>()!.accentCyan),
+                      Icon(Icons.volume_up_rounded, size: 13, color: Theme.of(context).extension<AeroTheme>()!.accentCyan),
                       const SizedBox(width: 4),
                       Text(
                         'Read',
@@ -397,46 +685,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                           color: Theme.of(context).extension<AeroTheme>()!.accentCyan,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              // Scenario quick-switch
-              InkWell(
-                onTap: () => ScenarioSelectorSheet.show(
-                  context,
-                  state.activeScenario,
-                  widget.onScenarioChange,
-                ),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).extension<AeroTheme>()!.glassSurface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Theme.of(context).extension<AeroTheme>()!.glassBorder),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        AeroTheme.getSourceIcon(
-                            state.sourceAttribution.primarySource),
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        'Simulate',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).extension<AeroTheme>()!.accentCyan,
-                        ),
-                      ),
-                      SizedBox(width: 3),
-                      Icon(Icons.tune_rounded,
-                          size: 13, color: Theme.of(context).extension<AeroTheme>()!.accentCyan),
                     ],
                   ),
                 ),
@@ -616,136 +864,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ═══════════════════════════════════════════════════════════════════════════
   //  TODAY'S ACTION CARD
   // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildActionCard(AeroSenseState state, Color aqiColor) {
-    final advisory = state.advisory;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                aqiColor.withValues(alpha: 0.10),
-                Theme.of(context).extension<AeroTheme>()!.glassSurfaceMid,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: aqiColor.withValues(alpha: 0.30), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: aqiColor.withValues(alpha: 0.14),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          padding: EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.shield_outlined, size: 16, color: aqiColor),
-                  SizedBox(width: 8),
-                  Text(
-                    "TODAY'S HYPERLOCAL ACTION",
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.3,
-                      color: aqiColor.withValues(alpha: 0.80),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              Text(
-                advisory.headline,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).extension<AeroTheme>()!.textPrimary,
-                  height: 1.35,
-                ),
-              ),
-              if (advisory.citizenActions.isNotEmpty) ...[
-                SizedBox(height: 12),
-                ...advisory.citizenActions.take(2).map((action) => Padding(
-                      padding: EdgeInsets.only(bottom: 7),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            margin:
-                                EdgeInsets.only(top: 5, right: 10),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: aqiColor,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: aqiColor.withValues(alpha: 0.5),
-                                  blurRadius: 6,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              action.title,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).extension<AeroTheme>()!.textSecondary,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-              ],
-              SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: aqiColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: aqiColor.withValues(alpha: 0.35)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Full Advisory',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: aqiColor,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios_rounded,
-                          size: 11, color: aqiColor),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ─── Animated pulse dot ──────────────────────────────────────────────────────

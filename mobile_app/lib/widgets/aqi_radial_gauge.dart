@@ -170,6 +170,7 @@ class _AqiRadialGaugeState extends State<AqiRadialGauge>
                         CustomPaint(
                           size: const Size(240, 210),
                           painter: _ShadowRingPainter(
+                            theme: theme,
                             aqi: widget.aqi,
                             aqiColor: aqiColor,
                             sweepProgress: _sweepAnim.value,
@@ -213,26 +214,40 @@ class _AqiRadialGaugeState extends State<AqiRadialGauge>
                           curve: Curves.easeOutCubic,
                           builder: (context, displayAqi, child) {
                             final col = AeroTheme.getAqiColor(displayAqi);
+                            final isLight = theme.bgDark.computeLuminance() > 0.5;
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Inner glass disc
+                                // Inner glass disc with dual-ring bevel
                                 Container(
-                                  width: 118,
-                                  height: 118,
+                                  width: 126,
+                                  height: 126,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     gradient: RadialGradient(
                                       colors: [
-                                        col.withValues(alpha: 0.12),
-                                        Colors.transparent,
+                                        col.withValues(alpha: isLight ? 0.12 : 0.18),
+                                        isLight ? const Color(0xFFF1F5F9) : theme.bgDeepNavy.withValues(alpha: 0.85),
+                                        isLight ? Colors.white : theme.bgDark.withValues(alpha: 0.95),
                                       ],
-                                      stops: const [0.4, 1.0],
+                                      stops: const [0.0, 0.65, 1.0],
                                     ),
                                     border: Border.all(
-                                      color: col.withValues(alpha: 0.20),
-                                      width: 1,
+                                      color: isLight ? theme.glassBorder : Colors.white.withValues(alpha: 0.16),
+                                      width: 1.4,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: col.withValues(alpha: isLight ? 0.15 : 0.28),
+                                        blurRadius: 28,
+                                        spreadRadius: 2,
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: isLight ? 0.08 : 0.45),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -240,26 +255,43 @@ class _AqiRadialGaugeState extends State<AqiRadialGauge>
                                       Text(
                                         '$displayAqi',
                                         style: TextStyle(
-                                          fontSize: 52,
+                                          fontSize: 50,
                                           fontWeight: FontWeight.w900,
-                                          color: col,
+                                          color: isLight ? theme.textPrimary : Colors.white,
+                                          letterSpacing: -1.0,
                                           height: 1.0,
                                           shadows: [
                                             Shadow(
-                                              color: col.withValues(alpha: 0.60),
-                                              blurRadius: 20,
+                                              color: col.withValues(alpha: isLight ? 0.35 : 0.85),
+                                              blurRadius: 22,
                                             ),
+                                            if (!isLight)
+                                              Shadow(
+                                                color: col.withValues(alpha: 0.40),
+                                                blurRadius: 44,
+                                              ),
                                           ],
                                         ),
                                       ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'AQI',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: col.withValues(alpha: 0.70),
-                                          letterSpacing: 1.6,
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: col.withValues(alpha: 0.18),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: col.withValues(alpha: 0.45),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'AQI • NAQI',
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: col,
+                                            letterSpacing: 1.2,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -275,94 +307,169 @@ class _AqiRadialGaugeState extends State<AqiRadialGauge>
                 },
               ),
 
-              SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // ── Category badge ──────────────────────────────────────────
               ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
                     padding:
-                        EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
                     decoration: BoxDecoration(
-                      color: aqiColor.withValues(alpha: 0.15),
+                      color: aqiColor.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: aqiColor.withValues(alpha: 0.50), width: 1.2),
+                          color: aqiColor.withValues(alpha: 0.55), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: aqiColor.withValues(alpha: 0.22),
+                          blurRadius: 14,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      widget.aqiCategory.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: aqiColor,
-                        letterSpacing: 1.0,
-                        shadows: [
-                          Shadow(
-                              color: aqiColor.withValues(alpha: 0.5),
-                              blurRadius: 10),
-                        ],
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: aqiColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: aqiColor,
+                                blurRadius: 6,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.aqiCategory.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w900,
+                            color: aqiColor,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'Prominent: ${widget.primaryPollutant}',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: theme.textSecondary,
                 ),
               ),
-              SizedBox(height: 18),
+              const SizedBox(height: 18),
 
-              // ── NAQI spectrum bar ────────────────────────────────────────
+              // ── Continuous NAQI spectrum bar with animated pin indicator ───────
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: SizedBox(
-                      height: 6,
-                      child: Row(
-                        children: [
-                          Expanded(child: Container(color: theme.aqiGood)),
-                          Expanded(
-                              child:
-                                  Container(color: theme.aqiSatisfactory)),
-                          Expanded(
-                              child: Container(color: theme.aqiModerate)),
-                          Expanded(child: Container(color: theme.aqiPoor)),
-                          Expanded(
-                              child: Container(color: theme.aqiVeryPoor)),
-                          Expanded(
-                              child: Container(color: theme.aqiSevere)),
-                        ],
-                      ),
-                    ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final barWidth = constraints.maxWidth;
+                      final clampedAqi = widget.aqi.clamp(0, 500);
+                      final pinRatio = clampedAqi / 500.0;
+                      final pinLeft = (barWidth * pinRatio - 7.5).clamp(0.0, barWidth - 15);
+
+                      return SizedBox(
+                        height: 20,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.centerLeft,
+                          children: [
+                            // Continuous gradient track
+                            Container(
+                              height: 7,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.aqiGood,
+                                    theme.aqiSatisfactory,
+                                    theme.aqiModerate,
+                                    theme.aqiPoor,
+                                    theme.aqiVeryPoor,
+                                    theme.aqiSevere,
+                                  ],
+                                  stops: const [0.08, 0.20, 0.40, 0.60, 0.80, 1.0],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Sliding indicator pin
+                            AnimatedPositioned(
+                              duration: const Duration(milliseconds: 600),
+                              curve: Curves.easeOutCubic,
+                              left: pinLeft,
+                              child: Container(
+                                width: 15,
+                                height: 15,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  border: Border.all(
+                                    color: aqiColor,
+                                    width: 3.0,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: aqiColor.withValues(alpha: 0.85),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    ),
+                                    const BoxShadow(
+                                      color: Colors.black54,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('0 Good',
                           style: TextStyle(
-                              fontSize: 9, color: theme.textMuted)),
+                              fontSize: 9.5, fontWeight: FontWeight.w600, color: theme.textMuted)),
                       Text('100',
                           style: TextStyle(
-                              fontSize: 9, color: theme.textMuted)),
+                              fontSize: 9.5, fontWeight: FontWeight.w600, color: theme.textMuted)),
                       Text('200',
                           style: TextStyle(
-                              fontSize: 9, color: theme.textMuted)),
+                              fontSize: 9.5, fontWeight: FontWeight.w600, color: theme.textMuted)),
                       Text('300',
                           style: TextStyle(
-                              fontSize: 9, color: theme.textMuted)),
-                      Text('500 Severe',
+                              fontSize: 9.5, fontWeight: FontWeight.w600, color: theme.textMuted)),
+                      Text('500+ Severe',
                           style: TextStyle(
-                              fontSize: 9, color: theme.textMuted)),
+                              fontSize: 9.5, fontWeight: FontWeight.w600, color: theme.textMuted)),
                     ],
                   ),
                 ],
@@ -385,10 +492,12 @@ double get _startRad => _startDeg * pi / 180;
 double get _totalRad => _totalDeg * pi / 180;
 
 class _ShadowRingPainter extends CustomPainter {
+  final AeroTheme theme;
   final int aqi;
   final Color aqiColor;
   final double sweepProgress;
   _ShadowRingPainter({
+    required this.theme,
     required this.aqi,
     required this.aqiColor,
     required this.sweepProgress,
@@ -398,10 +507,11 @@ class _ShadowRingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2 + 8);
     final radius = size.width / 2 - 14;
+    final isLight = theme.bgDark.computeLuminance() > 0.5;
 
     // Deep shadow track (outermost)
     final bgPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.55)
+      ..color = isLight ? Colors.black.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 22
       ..strokeCap = StrokeCap.round;
@@ -410,9 +520,9 @@ class _ShadowRingPainter extends CustomPainter {
       _startRad, _totalRad, false, bgPaint,
     );
 
-    // Mid dark track
+    // Mid track
     final midPaint = Paint()
-      ..color = const Color(0xFF0D1730)
+      ..color = isLight ? const Color(0xFFE2E8F0) : const Color(0xFF0D1730)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 18
       ..strokeCap = StrokeCap.round;
@@ -518,15 +628,19 @@ class _TopRingPainter extends CustomPainter {
       _startRad, activeSweep, false, topPaint,
     );
 
-    // Shimmer highlight dot at arc tip
+    // Shimmer highlight dot + glowing beacon at arc tip
     if (activeSweep > 0.05) {
       final tipAngle = _startRad + activeSweep;
       final tipX = center.dx + radius * cos(tipAngle);
       final tipY = center.dy + radius * sin(tipAngle);
-      final shimmerPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.9)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      canvas.drawCircle(Offset(tipX, tipY), 5, shimmerPaint);
+
+      final haloPaint = Paint()
+        ..color = aqiColor.withValues(alpha: 0.75)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(Offset(tipX, tipY), 8, haloPaint);
+
+      final beadPaint = Paint()..color = Colors.white;
+      canvas.drawCircle(Offset(tipX, tipY), 4.5, beadPaint);
     }
   }
 

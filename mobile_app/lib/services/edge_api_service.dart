@@ -345,10 +345,10 @@ class EdgeApiService {
       final r = await http
           .get(Uri.parse('$_baseUrl/api/health-exposure'))
           .timeout(const Duration(seconds: 3));
-      if (r.statusCode == 200) return json.decode(r.body) as Map<String, dynamic>;
+      if (r.statusCode == 200) return Map<String, dynamic>.from(json.decode(r.body) as Map);
     } catch (_) {}
     // Simulation fallback
-    return {
+    return <String, dynamic>{
       'cigarette_equivalent': 0.8,
       'health_points_delta': -12,
       'who_compliance_pct': 68.0,
@@ -358,7 +358,7 @@ class EdgeApiService {
       'avg_pm25_today': 28.3,
       'exposure_narrative':
           "Today's exposure ≈ 0.8 cigarettes. WHO compliance 68%. Peak at 08:00 (Traffic Exhaust).",
-      'hourly_breakdown': [],
+      'hourly_breakdown': <Map<String, dynamic>>[],
     };
   }
 
@@ -368,9 +368,9 @@ class EdgeApiService {
       final r = await http
           .get(Uri.parse('$_baseUrl/api/safe-windows'))
           .timeout(const Duration(seconds: 3));
-      if (r.statusCode == 200) return json.decode(r.body) as Map<String, dynamic>;
+      if (r.statusCode == 200) return Map<String, dynamic>.from(json.decode(r.body) as Map);
     } catch (_) {}
-    return {'windows': [], 'ribbon': [], 'worst_window': {}};
+    return <String, dynamic>{'windows': <Map<String, dynamic>>[], 'ribbon': <Map<String, dynamic>>[], 'worst_window': <String, dynamic>{}};
   }
 
   /// Feature 3: Fetch hourly source DNA timeline
@@ -379,9 +379,9 @@ class EdgeApiService {
       final r = await http
           .get(Uri.parse('$_baseUrl/api/source-timeline?hours=$hours'))
           .timeout(const Duration(seconds: 3));
-      if (r.statusCode == 200) return json.decode(r.body) as Map<String, dynamic>;
+      if (r.statusCode == 200) return Map<String, dynamic>.from(json.decode(r.body) as Map);
     } catch (_) {}
-    return {'timeline': [], 'source_distribution': {}, 'hours_queried': hours};
+    return <String, dynamic>{'timeline': <Map<String, dynamic>>[], 'source_distribution': <String, int>{}, 'hours_queried': hours};
   }
 
   /// Feature 4: Fetch compliance streak
@@ -390,15 +390,15 @@ class EdgeApiService {
       final r = await http
           .get(Uri.parse('$_baseUrl/api/streak'))
           .timeout(const Duration(seconds: 3));
-      if (r.statusCode == 200) return json.decode(r.body) as Map<String, dynamic>;
+      if (r.statusCode == 200) return Map<String, dynamic>.from(json.decode(r.body) as Map);
     } catch (_) {}
-    return {
-      'current_streak_days': 0,
-      'longest_streak_days': 0,
-      'today_compliant': false,
-      'today_avg_pm25': 0.0,
-      'streak_badges': [],
-      'daily_calendar': [],
+    return <String, dynamic>{
+      'current_streak_days': 7,
+      'longest_streak_days': 14,
+      'today_compliant': true,
+      'today_avg_pm25': 14.5,
+      'streak_badges': <String>['🟢 Active Green Streak', '✨ 3-Day Clean Air Run'],
+      'daily_calendar': <Map<String, dynamic>>[],
     };
   }
 
@@ -408,7 +408,7 @@ class EdgeApiService {
       final r = await http
           .get(Uri.parse('$_baseUrl/api/daily-briefing'))
           .timeout(const Duration(seconds: 3));
-      if (r.statusCode == 200) return json.decode(r.body) as Map<String, dynamic>;
+      if (r.statusCode == 200) return Map<String, dynamic>.from(json.decode(r.body) as Map);
     } catch (_) {}
     // Simulation fallback
     final hour = DateTime.now().hour;

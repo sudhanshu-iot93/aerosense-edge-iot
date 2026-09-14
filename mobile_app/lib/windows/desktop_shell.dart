@@ -18,12 +18,16 @@ class DesktopShell extends StatefulWidget {
   final AeroSenseState state;
   final VoidCallback onToggleTheme;
   final bool isDark;
+  final ThemeMode currentThemeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
 
   const DesktopShell({
     super.key,
     required this.state,
     required this.onToggleTheme,
     required this.isDark,
+    this.currentThemeMode = ThemeMode.system,
+    this.onThemeModeChanged,
   });
 
   @override
@@ -657,6 +661,8 @@ class _DesktopShellState extends State<DesktopShell> {
         return SettingsScreen(
           currentNodeIp: _api.baseUrl,
           onNodeIpChanged: (ip) => _api.baseUrl = ip,
+          currentThemeMode: widget.currentThemeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
         );
       default:
         return DesktopDashboardView(

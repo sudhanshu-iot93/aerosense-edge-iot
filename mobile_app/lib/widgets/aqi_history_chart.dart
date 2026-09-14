@@ -48,15 +48,24 @@ class AqiHistoryChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 22,
+                      reservedSize: 24,
+                      interval: 1.0,
                       getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= 0 && value.toInt() < forecast.forecastHorizons.length) {
-                          return Text(
-                            forecast.forecastHorizons[value.toInt()].label,
-                            style: TextStyle(color: Theme.of(context).extension<AeroTheme>()!.textMuted, fontSize: 10),
+                        final idx = value.round();
+                        if ((value - idx).abs() < 0.05 && idx >= 0 && idx < forecast.forecastHorizons.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              forecast.forecastHorizons[idx].label,
+                              style: TextStyle(
+                                color: Theme.of(context).extension<AeroTheme>()!.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           );
                         }
-                        return Text('');
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),

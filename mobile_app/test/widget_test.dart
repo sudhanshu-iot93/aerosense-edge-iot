@@ -86,7 +86,7 @@ void main() {
       expect(AeroTheme.getAqiCategory(450), 'Severe');
 
       expect(AeroTheme.getAqiColor(30), AeroTheme.dark.aqiGood);
-      expect(AeroTheme.getAqiColor(350), AppTheme.aqiVeryPoor);
+      expect(AeroTheme.getAqiColor(350), AeroTheme.dark.aqiVeryPoor);
     });
 
     test('Source icons mapping returns emoji', () {

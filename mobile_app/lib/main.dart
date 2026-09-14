@@ -29,7 +29,6 @@ Future<void> main() async {
     } catch (_) {}
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
       systemNavigationBarColor: Colors.transparent,
     ));
   }
@@ -44,11 +43,24 @@ class AeroSenseApp extends StatefulWidget {
 }
 
 class _AeroSenseAppState extends State<AeroSenseApp> {
-  ThemeMode _themeMode = ThemeMode.dark;
+  // Follows phone dark / light mode by default!
+  ThemeMode _themeMode = ThemeMode.system;
 
   void _toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      if (_themeMode == ThemeMode.system) {
+        _themeMode = ThemeMode.dark;
+      } else if (_themeMode == ThemeMode.dark) {
+        _themeMode = ThemeMode.light;
+      } else {
+        _themeMode = ThemeMode.system;
+      }
+    });
+  }
+
+  void _setThemeMode(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
     });
   }
 
@@ -60,9 +72,16 @@ class _AeroSenseAppState extends State<AeroSenseApp> {
       themeMode: _themeMode,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: MainNavigationShell(
-        onToggleTheme: _toggleTheme,
-        isDark: _themeMode == ThemeMode.dark,
+      home: Builder(
+        builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return MainNavigationShell(
+            onToggleTheme: _toggleTheme,
+            onThemeModeChanged: _setThemeMode,
+            currentThemeMode: _themeMode,
+            isDark: isDark,
+          );
+        },
       ),
     );
   }
@@ -70,11 +89,15 @@ class _AeroSenseAppState extends State<AeroSenseApp> {
 
 class MainNavigationShell extends StatefulWidget {
   final VoidCallback onToggleTheme;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+  final ThemeMode currentThemeMode;
   final bool isDark;
 
   const MainNavigationShell({
     super.key,
     required this.onToggleTheme,
+    required this.onThemeModeChanged,
+    required this.currentThemeMode,
     required this.isDark,
   });
 
@@ -134,6 +157,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         pageBuilder: (context, anim, secondary) => SettingsScreen(
           currentNodeIp: _nodeIp,
           onNodeIpChanged: (ip) => setState(() => _nodeIp = ip),
+          currentThemeMode: widget.currentThemeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
         ),
         transitionsBuilder: (context, anim, secondary, child) => SlideTransition(
           position: Tween<Offset>(
@@ -549,6 +574,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             state: state,
             onToggleTheme: widget.onToggleTheme,
             isDark: widget.isDark,
+            currentThemeMode: widget.currentThemeMode,
+            onThemeModeChanged: widget.onThemeModeChanged,
           );
         }
 
@@ -558,6 +585,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             state: state,
             onScenarioChange: _onScenarioChanged,
             onRefresh: _apiService.fetchAndUpdateState,
+            onNavigateTab: (idx) => setState(() => _currentIndex = idx),
           ),
           AdvisoryScreen(state: state),
           SensorsScreen(state: state),
@@ -580,6 +608,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               _onScenarioChanged,
             ),
             onOpenNodeConfig: () => _openNodeConfig(context),
+            onToggleTheme: widget.onToggleTheme,
+            currentThemeMode: widget.currentThemeMode,
             isLive: state.isLiveConnected,
             activeScenario: state.activeScenario,
           ),

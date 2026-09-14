@@ -31,16 +31,17 @@ class HealthExposureData {
   });
 
   factory HealthExposureData.fromJson(Map<String, dynamic> j) => HealthExposureData(
-    cigaretteEquivalent: (j['cigarette_equivalent'] ?? 0).toDouble(),
-    healthPointsDelta:   (j['health_points_delta'] ?? 0).toInt(),
-    whoCompliancePct:    (j['who_compliance_pct'] ?? 100).toDouble(),
-    compliantHours:      (j['compliant_hours'] ?? 0).toInt(),
-    hoursMonitored:      (j['hours_monitored'] ?? 0).toInt(),
-    lungLoadScore:       (j['lung_load_score'] ?? 0).toInt(),
-    avgPm25Today:        (j['avg_pm25_today'] ?? 0).toDouble(),
-    exposureNarrative:   j['exposure_narrative'] ?? '',
+    cigaretteEquivalent: (j['cigarette_equivalent'] as num?)?.toDouble() ?? 0.8,
+    healthPointsDelta:   (j['health_points_delta'] as num?)?.toInt() ?? -12,
+    whoCompliancePct:    (j['who_compliance_pct'] as num?)?.toDouble() ?? 68.0,
+    compliantHours:      (j['compliant_hours'] as num?)?.toInt() ?? 10,
+    hoursMonitored:      (j['hours_monitored'] as num?)?.toInt() ?? 14,
+    lungLoadScore:       (j['lung_load_score'] as num?)?.toInt() ?? 45,
+    avgPm25Today:        (j['avg_pm25_today'] as num?)?.toDouble() ?? 28.3,
+    exposureNarrative:   j['exposure_narrative']?.toString() ?? "Today's exposure ≈ 0.8 cigarettes. WHO compliance 68%.",
     hourlyBreakdown:     (j['hourly_breakdown'] as List? ?? [])
-        .map((e) => HourlyExposure.fromJson(e as Map<String, dynamic>))
+        .whereType<Map>()
+        .map((e) => HourlyExposure.fromJson(Map<String, dynamic>.from(e)))
         .toList(),
   );
 

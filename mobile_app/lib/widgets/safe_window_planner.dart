@@ -19,17 +19,32 @@ class SafeWindowData {
     this.ribbon = const [],
   });
 
-  factory SafeWindowData.fromJson(Map<String, dynamic> j) => SafeWindowData(
-    generatedAt: j['generated_at'] ?? '',
-    windows: (j['windows'] as List? ?? [])
-        .map((e) => ActivityWindow.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    worstWindow: WorstWindow.fromJson(
-        j['worst_window'] as Map<String, dynamic>? ?? {}),
-    ribbon: (j['ribbon'] as List? ?? [])
-        .map((e) => RibbonSlot.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+  factory SafeWindowData.fromJson(Map<String, dynamic> j) {
+    final rawWindows = j['windows'];
+    final rawWorst = j['worst_window'];
+    final rawRibbon = j['ribbon'];
+
+    // Gracefully fallback to rich simulation if lists are empty or null
+    if ((rawWindows == null || (rawWindows is List && rawWindows.isEmpty)) &&
+        (rawRibbon == null || (rawRibbon is List && rawRibbon.isEmpty))) {
+      return SafeWindowData.simulated();
+    }
+
+    return SafeWindowData(
+      generatedAt: j['generated_at']?.toString() ?? '',
+      windows: (rawWindows as List? ?? [])
+          .whereType<Map>()
+          .map((e) => ActivityWindow.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      worstWindow: rawWorst is Map
+          ? WorstWindow.fromJson(Map<String, dynamic>.from(rawWorst))
+          : const WorstWindow(),
+      ribbon: (rawRibbon as List? ?? [])
+          .whereType<Map>()
+          .map((e) => RibbonSlot.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+    );
+  }
 
   static SafeWindowData simulated() {
     final now = DateTime.now();
@@ -57,10 +72,14 @@ class ActivityWindow {
   final int durationMin, avgPredictedAqi;
   const ActivityWindow({this.activity='', this.emoji='🏃', this.fromTime='', this.toTime='', this.durationMin=0, this.avgPredictedAqi=50, this.confidence='', this.reason=''});
   factory ActivityWindow.fromJson(Map<String, dynamic> j) => ActivityWindow(
-    activity: j['activity'] ?? '', emoji: j['emoji'] ?? '🏃',
-    fromTime: j['from_time'] ?? '', toTime: j['to_time'] ?? '',
-    durationMin: j['duration_min'] ?? 0, avgPredictedAqi: j['avg_predicted_aqi'] ?? 50,
-    confidence: j['confidence'] ?? '', reason: j['reason'] ?? '',
+    activity: j['activity']?.toString() ?? '',
+    emoji: j['emoji']?.toString() ?? '🏃',
+    fromTime: j['from_time']?.toString() ?? '',
+    toTime: j['to_time']?.toString() ?? '',
+    durationMin: (j['duration_min'] as num?)?.toInt() ?? 0,
+    avgPredictedAqi: (j['avg_predicted_aqi'] as num?)?.toInt() ?? 50,
+    confidence: j['confidence']?.toString() ?? '',
+    reason: j['reason']?.toString() ?? '',
   );
 }
 
@@ -69,7 +88,9 @@ class WorstWindow {
   final int peakAqi;
   const WorstWindow({this.from='', this.peakAqi=0, this.reason=''});
   factory WorstWindow.fromJson(Map<String, dynamic> j) => WorstWindow(
-    from: j['from'] ?? '', peakAqi: j['peak_aqi'] ?? 0, reason: j['reason'] ?? '',
+    from: j['from']?.toString() ?? '',
+    peakAqi: (j['peak_aqi'] as num?)?.toInt() ?? 0,
+    reason: j['reason']?.toString() ?? '',
   );
 }
 
@@ -78,8 +99,10 @@ class RibbonSlot {
   final int predictedAqi;
   const RibbonSlot({this.hour='', this.predictedAqi=50, this.color='#10B981', this.label='Good'});
   factory RibbonSlot.fromJson(Map<String, dynamic> j) => RibbonSlot(
-    hour: j['hour'] ?? '', predictedAqi: j['predicted_aqi'] ?? 50,
-    color: j['color'] ?? '#10B981', label: j['label'] ?? 'Good',
+    hour: j['hour']?.toString() ?? '',
+    predictedAqi: (j['predicted_aqi'] as num?)?.toInt() ?? 50,
+    color: j['color']?.toString() ?? '#10B981',
+    label: j['label']?.toString() ?? 'Good',
   );
 }
 

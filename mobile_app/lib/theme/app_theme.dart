@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AeroTheme extends ThemeExtension<AeroTheme> {
@@ -204,35 +205,46 @@ class AeroTheme extends ThemeExtension<AeroTheme> {
     double glowIntensity = 0.22,
     Color? fillColor,
   }) {
+    final isLight = bgDark.computeLuminance() > 0.5;
     return BoxDecoration(
-      color: fillColor ?? glassSurface,
+      gradient: fillColor != null
+          ? null
+          : LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                glassSurfaceMid,
+                glassSurface,
+              ],
+            ),
+      color: fillColor,
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
         color: borderColor ?? glassBorder,
-        width: 1.2,
+        width: 1.1,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.15),
+          color: Colors.black.withValues(alpha: isLight ? 0.05 : 0.22),
           blurRadius: 24,
           spreadRadius: -4,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
+          color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.08),
           blurRadius: 8,
           offset: const Offset(0, 3),
         ),
         if (glow && glowColor != null)
           BoxShadow(
-            color: glowColor.withValues(alpha: glowIntensity),
+            color: glowColor.withValues(alpha: isLight ? glowIntensity * 0.5 : glowIntensity),
             blurRadius: 28,
             spreadRadius: 2,
             offset: const Offset(0, 6),
           ),
         if (glow && glowColor != null)
           BoxShadow(
-            color: glowColor.withValues(alpha: glowIntensity * 0.5),
+            color: glowColor.withValues(alpha: (isLight ? glowIntensity * 0.5 : glowIntensity) * 0.5),
             blurRadius: 60,
             spreadRadius: 4,
             offset: const Offset(0, 0),
@@ -247,6 +259,7 @@ class AeroTheme extends ThemeExtension<AeroTheme> {
     Color? glowColor,
     double glowIntensity = 0.28,
   }) {
+    final isLight = bgDark.computeLuminance() > 0.5;
     return BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
@@ -265,26 +278,26 @@ class AeroTheme extends ThemeExtension<AeroTheme> {
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.25),
+          color: Colors.black.withValues(alpha: isLight ? 0.07 : 0.25),
           blurRadius: 36,
           spreadRadius: -4,
           offset: const Offset(0, 16),
         ),
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.10),
+          color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.10),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
         if (glowColor != null)
           BoxShadow(
-            color: glowColor.withValues(alpha: glowIntensity),
+            color: glowColor.withValues(alpha: isLight ? glowIntensity * 0.5 : glowIntensity),
             blurRadius: 40,
             spreadRadius: 4,
             offset: const Offset(0, 8),
           ),
         if (glowColor != null)
           BoxShadow(
-            color: glowColor.withValues(alpha: glowIntensity * 0.4),
+            color: glowColor.withValues(alpha: (isLight ? glowIntensity * 0.5 : glowIntensity) * 0.4),
             blurRadius: 80,
             spreadRadius: 6,
             offset: const Offset(0, 0),
@@ -294,53 +307,53 @@ class AeroTheme extends ThemeExtension<AeroTheme> {
   }
 
   static const dark = AeroTheme(
-    bgDark: Color(0xFF050B18),
-    bgDeepNavy: Color(0xFF060D1F),
-    bgSurface: Color(0xFF0D1730),
-    bgMid: Color(0xFF111E38),
-    glassSurface: Color(0x1A1E3A5F),
-    glassSurfaceMid: Color(0x261E3A5F),
-    glassSurfaceHigh: Color(0x331E3A5F),
-    glassBorder: Color(0x3306B6D4),
-    glassBorderBright: Color(0x6606B6D4),
-    cardBg: Color(0xFF111E38),
-    cardBorder: Color(0xFF1E3A5F),
-    cardHover: Color(0xFF172040),
-    primaryEmerald: Color(0xFF10B981),
-    glowEmerald: Color(0xFF34D399),
-    accentCyan: Color(0xFF06B6D4),
-    glowCyan: Color(0xFF22D3EE),
+    bgDark: Color(0xFF070B14),
+    bgDeepNavy: Color(0xFF0C1220),
+    bgSurface: Color(0xFF10192C),
+    bgMid: Color(0xFF16233B),
+    glassSurface: Color(0x18FFFFFF),
+    glassSurfaceMid: Color(0x22FFFFFF),
+    glassSurfaceHigh: Color(0x2EFFFFFF),
+    glassBorder: Color(0x1FFFFFFF),
+    glassBorderBright: Color(0x38FFFFFF),
+    cardBg: Color(0xFF0D1527),
+    cardBorder: Color(0x24FFFFFF),
+    cardHover: Color(0xFF16223B),
+    primaryEmerald: Color(0xFF00F5A0),
+    glowEmerald: Color(0xFF00D9F5),
+    accentCyan: Color(0xFF00D4FF),
+    glowCyan: Color(0xFF38BDF8),
     accentIndigo: Color(0xFF6366F1),
-    accentViolet: Color(0xFF8B5CF6),
-    accentAmber: Color(0xFFF59E0B),
-    aqiGood: Color(0xFF10B981),
+    accentViolet: Color(0xFFA855F7),
+    accentAmber: Color(0xFFFBBF24),
+    aqiGood: Color(0xFF00F5A0),
     aqiSatisfactory: Color(0xFF84CC16),
-    aqiModerate: Color(0xFFF59E0B),
-    aqiPoor: Color(0xFFF97316),
-    aqiVeryPoor: Color(0xFFEF4444),
+    aqiModerate: Color(0xFFFBBF24),
+    aqiPoor: Color(0xFFFB923C),
+    aqiVeryPoor: Color(0xFFF43F5E),
     aqiSevere: Color(0xFFA855F7),
-    textPrimary: Color(0xFFF0F9FF),
+    textPrimary: Color(0xFFFFFFFF),
     textSecondary: Color(0xFF94A3B8),
-    textMuted: Color(0xFF4E6280),
+    textMuted: Color(0xFF64748B),
   );
 
   static const light = AeroTheme(
-    bgDark: Color(0xFFE8EDF4), // Cooler blue-gray background for depth
-    bgDeepNavy: Color(0xFFD5DCE8),
-    bgSurface: Color(0xFFF7F9FC), // Slightly off-white, not pure white
-    bgMid: Color(0xFFEEF2F7),
-    glassSurface: Color(0xDDFFFFFF), // More opaque frosted glass
-    glassSurfaceMid: Color(0xE8FFFFFF),
-    glassSurfaceHigh: Color(0xF2FFFFFF),
-    glassBorder: Color(0x2A0F172A), // Visible subtle border
-    glassBorderBright: Color(0x400F172A),
+    bgDark: Color(0xFFF1F5F9),
+    bgDeepNavy: Color(0xFFE2E8F0),
+    bgSurface: Color(0xFFFFFFFF),
+    bgMid: Color(0xFFF8FAFC),
+    glassSurface: Color(0xE6FFFFFF),
+    glassSurfaceMid: Color(0xF2FFFFFF),
+    glassSurfaceHigh: Color(0xFAFFFFFF),
+    glassBorder: Color(0x1F0F172A),
+    glassBorderBright: Color(0x330F172A),
     cardBg: Color(0xFFFFFFFF),
-    cardBorder: Color(0xFFB8C4D4), // Stronger card border for definition
-    cardHover: Color(0xFFEDF1F7),
-    primaryEmerald: Color(0xFF059669), // Deep emerald for premium feel
+    cardBorder: Color(0x1F0F172A),
+    cardHover: Color(0xFFF8FAFC),
+    primaryEmerald: Color(0xFF059669),
     glowEmerald: Color(0xFF10B981),
-    accentCyan: Color(0xFF0891B2),
-    glowCyan: Color(0xFF06B6D4),
+    accentCyan: Color(0xFF0284C7),
+    glowCyan: Color(0xFF0EA5E9),
     accentIndigo: Color(0xFF4F46E5),
     accentViolet: Color(0xFF7C3AED),
     accentAmber: Color(0xFFD97706),
@@ -350,9 +363,9 @@ class AeroTheme extends ThemeExtension<AeroTheme> {
     aqiPoor: Color(0xFFEA580C),
     aqiVeryPoor: Color(0xFFBE123C),
     aqiSevere: Color(0xFF7E22CE),
-    textPrimary: Color(0xFF0F172A), // Deep slate for strong readability
-    textSecondary: Color(0xFF3B4F6B),  // Darker secondary for better contrast
-    textMuted: Color(0xFF7B8DA6),
+    textPrimary: Color(0xFF0F172A),
+    textSecondary: Color(0xFF475569),
+    textMuted: Color(0xFF94A3B8),
   );
 }
 
@@ -393,6 +406,13 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
@@ -464,6 +484,13 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,

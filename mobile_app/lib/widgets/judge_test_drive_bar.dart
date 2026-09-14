@@ -1,5 +1,5 @@
 // widgets/judge_test_drive_bar.dart
-// 1-Click Preset Scenario Toolbar for Hackathon Judges
+// Executive Mission Control Scenario Toolbar
 
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
@@ -18,7 +18,7 @@ class JudgeTestDriveBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeExt = Theme.of(context).extension<AeroTheme>()!;
+    final theme = Theme.of(context).extension<AeroTheme>()!;
 
     final scenarios = [
       {'name': 'Clean Baseline', 'label': '🌿 Clean Air'},
@@ -29,67 +29,142 @@ class JudgeTestDriveBar extends StatelessWidget {
     ];
 
     return Container(
-      height: 48,
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      height: 44,
+      margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         children: [
+          // Simulation badge
           Container(
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD60A).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFFFD60A).withValues(alpha: 0.4)),
-            ),
-            child: const Text(
-              '⚡ JUDGE TEST DRIVE:',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFFFFD60A),
-                letterSpacing: 0.5,
+              color: theme.accentCyan.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: theme.accentCyan.withValues(alpha: 0.35),
+                width: 1.0,
               ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.accentCyan,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.accentCyan,
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  'SIMULATION',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: theme.accentCyan,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ],
             ),
           ),
           ...scenarios.map((scen) {
             final isSelected = activeScenario == scen['name'];
             return Padding(
               padding: const EdgeInsets.only(right: 8.0),
-              child: FilterChip(
-                selected: isSelected,
-                label: Text(scen['label']!),
-                labelStyle: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : themeExt.textSecondary,
+              child: InkWell(
+                onTap: () => onScenarioChange(scen['name']!),
+                borderRadius: BorderRadius.circular(14),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.accentCyan.withValues(alpha: 0.18)
+                        : theme.bgSurface.withValues(alpha: 0.60),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? theme.accentCyan.withValues(alpha: 0.65)
+                          : Colors.white.withValues(alpha: 0.12),
+                      width: 1.1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: theme.accentCyan.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      scen['label']!,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                        color: isSelected ? Colors.white : theme.textSecondary,
+                      ),
+                    ),
+                  ),
                 ),
-                backgroundColor: themeExt.glassSurface,
-                selectedColor: themeExt.accentCyan.withValues(alpha: 0.3),
-                side: BorderSide(
-                  color: isSelected ? themeExt.accentCyan : themeExt.glassBorder,
-                ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                onSelected: (_) => onScenarioChange(scen['name']!),
               ),
             );
           }),
+          // Incident report export action
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
-            child: ActionChip(
-              avatar: const Icon(Icons.description_outlined, size: 14, color: Colors.white),
-              label: const Text('📄 Incident Report'),
-              labelStyle: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+            child: InkWell(
+              onTap: onOpenIncidentReport,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.primaryEmerald.withValues(alpha: 0.22),
+                      theme.primaryEmerald.withValues(alpha: 0.12),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: theme.primaryEmerald.withValues(alpha: 0.45),
+                    width: 1.1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.description_outlined,
+                      size: 14,
+                      color: theme.primaryEmerald,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Report',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: theme.primaryEmerald,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              backgroundColor: themeExt.primaryEmerald.withValues(alpha: 0.25),
-              side: BorderSide(color: themeExt.primaryEmerald.withValues(alpha: 0.5)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              onPressed: onOpenIncidentReport,
             ),
           ),
         ],

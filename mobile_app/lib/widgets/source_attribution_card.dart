@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/air_quality_state.dart';
 import '../theme/app_theme.dart';
 
-class SourceAttributionCard extends StatelessWidget {
+class SourceAttributionCard extends StatefulWidget {
   final SourceAttribution attribution;
   final FeaturesData features;
 
@@ -15,9 +15,19 @@ class SourceAttributionCard extends StatelessWidget {
   });
 
   @override
+  State<SourceAttributionCard> createState() => _SourceAttributionCardState();
+}
+
+class _SourceAttributionCardState extends State<SourceAttributionCard> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final attribution = widget.attribution;
+    final features = widget.features;
     final icon = AeroTheme.getSourceIcon(attribution.primarySource);
     final aqiColor = AeroTheme.getAqiColor(features.aqi);
+    final theme = Theme.of(context).extension<AeroTheme>()!;
 
     return Container(
       padding: EdgeInsets.all(20),
@@ -115,78 +125,128 @@ class SourceAttributionCard extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: 18),
-          Text(
-            'Stoichiometric Chemical Fingerprints:',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: Theme.of(context).extension<AeroTheme>()!.textSecondary,
-            ),
-          ),
-          SizedBox(height: 12),
-
-          // Ratio 1: PM2.5 / PM10
-          _buildRatioMeter(context, label: 'Fine Particle Ratio (PM2.5 / PM10)',
-            valStr: '${features.pmRatio.toStringAsFixed(2)} ${features.pmRatio > 0.65 ? '(Combustion)' : (features.pmRatio < 0.35 ? '(Coarse Dust)' : '(Normal)')}',
-            progress: (features.pmRatio).clamp(0.0, 1.0),
-            color: features.pmRatio > 0.65 ? Theme.of(context).extension<AeroTheme>()!.aqiPoor : Theme.of(context).extension<AeroTheme>()!.primaryEmerald,
-          ),
-          SizedBox(height: 10),
-
-          // Ratio 2: CO / CO2
-          _buildRatioMeter(context, label: 'Combustion Inefficiency (CO / CO2)',
-            valStr: '${features.coToCo2Ratio.toStringAsFixed(2)} ${features.coToCo2Ratio > 3.0 ? '(Smoldering Fire)' : '(Clean)'}',
-            progress: (features.coToCo2Ratio / 5.0).clamp(0.0, 1.0),
-            color: features.coToCo2Ratio > 3.0 ? Theme.of(context).extension<AeroTheme>()!.aqiVeryPoor : Theme.of(context).extension<AeroTheme>()!.accentCyan,
-          ),
-          SizedBox(height: 10),
-
-          // Ratio 3: NO2 / VOC
-          _buildRatioMeter(context, label: 'Traffic NOx Index (NO2 / VOC)',
-            valStr: '${features.no2ToVocRatio.toStringAsFixed(2)} ${features.no2ToVocRatio > 0.8 ? '(High Diesel)' : '(Low)'}',
-            progress: (features.no2ToVocRatio / 1.5).clamp(0.0, 1.0),
-            color: features.no2ToVocRatio > 0.8 ? Theme.of(context).extension<AeroTheme>()!.aqiModerate : Theme.of(context).extension<AeroTheme>()!.accentIndigo,
-          ),
-
-          SizedBox(height: 16),
-
-          // Explainable AI Evidence Chips
-          Text(
-            'Explainable AI (XAI) Attribution Evidence:',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: Theme.of(context).extension<AeroTheme>()!.textSecondary,
-            ),
-          ),
-          SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: attribution.attributions.map((attr) {
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).extension<AeroTheme>()!.cardHover,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Theme.of(context).extension<AeroTheme>()!.cardBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.check_circle_outline, size: 14, color: Theme.of(context).extension<AeroTheme>()!.accentCyan),
-                    SizedBox(width: 6),
-                    Text(
-                      '${attr.factor}: ${attr.evidence}',
-                      style: TextStyle(fontSize: 11, color: Theme.of(context).extension<AeroTheme>()!.textPrimary),
+          // Interactive Expander Toggle
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.accentCyan.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: theme.accentCyan.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _isExpanded ? Icons.tune_rounded : Icons.science_outlined,
+                    size: 14,
+                    color: theme.accentCyan,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _isExpanded ? 'Hide Technical Fingerprints' : 'View Chemical Ratios & XAI Proof',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: theme.accentCyan,
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    size: 16,
+                    color: theme.accentCyan,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  'Stoichiometric Chemical Fingerprints:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: theme.textSecondary,
+                  ),
                 ),
-              );
-            }).toList(),
+                const SizedBox(height: 12),
+
+                // Ratio 1: PM2.5 / PM10
+                _buildRatioMeter(context, label: 'Fine Particle Ratio (PM2.5 / PM10)',
+                  valStr: '${features.pmRatio.toStringAsFixed(2)} ${features.pmRatio > 0.65 ? '(Combustion)' : (features.pmRatio < 0.35 ? '(Coarse Dust)' : '(Normal)')}',
+                  progress: (features.pmRatio).clamp(0.0, 1.0),
+                  color: features.pmRatio > 0.65 ? theme.aqiPoor : theme.primaryEmerald,
+                ),
+                const SizedBox(height: 10),
+
+                // Ratio 2: CO / CO2
+                _buildRatioMeter(context, label: 'Combustion Inefficiency (CO / CO2)',
+                  valStr: '${features.coToCo2Ratio.toStringAsFixed(2)} ${features.coToCo2Ratio > 3.0 ? '(Smoldering Fire)' : '(Clean)'}',
+                  progress: (features.coToCo2Ratio / 5.0).clamp(0.0, 1.0),
+                  color: features.coToCo2Ratio > 3.0 ? theme.aqiVeryPoor : theme.accentCyan,
+                ),
+                const SizedBox(height: 10),
+
+                // Ratio 3: NO2 / VOC
+                _buildRatioMeter(context, label: 'Traffic NOx Index (NO2 / VOC)',
+                  valStr: '${features.no2ToVocRatio.toStringAsFixed(2)} ${features.no2ToVocRatio > 0.8 ? '(High Diesel)' : '(Low)'}',
+                  progress: (features.no2ToVocRatio / 1.5).clamp(0.0, 1.0),
+                  color: features.no2ToVocRatio > 0.8 ? theme.aqiModerate : theme.accentIndigo,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Explainable AI Evidence Chips
+                Text(
+                  'Explainable AI (XAI) Attribution Evidence:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: theme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: attribution.attributions.map((attr) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: theme.cardHover,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: theme.cardBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_outline, size: 14, color: theme.accentCyan),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${attr.factor}: ${attr.evidence}',
+                            style: TextStyle(fontSize: 11, color: theme.textPrimary),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+            crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 280),
           ),
         ],
       ),

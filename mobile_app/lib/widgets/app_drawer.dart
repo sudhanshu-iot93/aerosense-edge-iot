@@ -20,6 +20,8 @@ class AppDrawer extends StatefulWidget {
   final VoidCallback onOpenAbout;
   final VoidCallback onOpenScenario;
   final VoidCallback onOpenNodeConfig;
+  final VoidCallback onToggleTheme;
+  final ThemeMode currentThemeMode;
   final bool isLive;
   final String activeScenario;
 
@@ -32,6 +34,8 @@ class AppDrawer extends StatefulWidget {
     required this.onOpenAbout,
     required this.onOpenScenario,
     required this.onOpenNodeConfig,
+    required this.onToggleTheme,
+    this.currentThemeMode = ThemeMode.system,
     required this.isLive,
     required this.activeScenario,
   });
@@ -86,8 +90,8 @@ class _AppDrawerState extends State<AppDrawer>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF0A1628).withValues(alpha: 0.97),
-                    const Color(0xFF060D1F).withValues(alpha: 0.99),
+                    Theme.of(context).extension<AeroTheme>()!.bgDeepNavy.withValues(alpha: 0.97),
+                    Theme.of(context).extension<AeroTheme>()!.bgDark.withValues(alpha: 0.99),
                   ],
                 ),
                 border: Border(
@@ -241,6 +245,7 @@ class _AppDrawerState extends State<AppDrawer>
                           ),
                           SizedBox(height: 8),
                           _sectionLabel('SETTINGS'),
+                          _buildThemeActionItem(),
                           _buildActionItem(
                             icon: Icons.notifications_outlined,
                             iconColor: Theme.of(context).extension<AeroTheme>()!.accentAmber,
@@ -569,6 +574,40 @@ class _AppDrawerState extends State<AppDrawer>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildThemeActionItem() {
+    final theme = Theme.of(context).extension<AeroTheme>()!;
+    final mode = widget.currentThemeMode;
+    final IconData icon;
+    final String label;
+    final String subtitle;
+
+    switch (mode) {
+      case ThemeMode.system:
+        icon = Icons.brightness_auto_rounded;
+        label = 'Theme: System Auto';
+        subtitle = 'Follows phone dark / light setting';
+        break;
+      case ThemeMode.dark:
+        icon = Icons.dark_mode_rounded;
+        label = 'Theme: Dark Mode';
+        subtitle = 'Obsidian & Cyber Mint';
+        break;
+      case ThemeMode.light:
+        icon = Icons.light_mode_rounded;
+        label = 'Theme: Light Mode';
+        subtitle = 'Airy Glass & Slate';
+        break;
+    }
+
+    return _buildActionItem(
+      icon: icon,
+      iconColor: theme.accentCyan,
+      label: label,
+      subtitle: subtitle,
+      onTap: widget.onToggleTheme,
     );
   }
 

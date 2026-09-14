@@ -5,7 +5,6 @@
 import FlutterMacOS
 import Foundation
 
-import app_settings
 import audioplayers_darwin
 import connectivity_plus
 import device_info_plus
@@ -24,10 +23,8 @@ import speech_to_text
 import sqflite_darwin
 import url_launcher_macos
 import window_manager
-import workmanager_apple
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  AppSettingsPlugin.register(with: registry.registrar(forPlugin: "AppSettingsPlugin"))
   AudioplayersDarwinPlugin.register(with: registry.registrar(forPlugin: "AudioplayersDarwinPlugin"))
   ConnectivityPlusPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlusPlugin"))
   DeviceInfoPlusMacosPlugin.register(with: registry.registrar(forPlugin: "DeviceInfoPlusMacosPlugin"))
@@ -46,5 +43,4 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
   WindowManagerPlugin.register(with: registry.registrar(forPlugin: "WindowManagerPlugin"))
-  WorkmanagerPlugin.register(with: registry.registrar(forPlugin: "WorkmanagerPlugin"))
 }
